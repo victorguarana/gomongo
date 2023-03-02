@@ -1,0 +1,53 @@
+package mongo
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"gomongo/database/connection"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+)
+
+var ErrDatabaseNotInitialized = errors.New("database was not initialized")
+
+func Create(collectionName string, object interface{}) error {
+	collection, err := getCollection(collectionName)
+	if err != nil {
+		return err
+	}
+
+	objectBSON, err := dataToBSON(object)
+	if err != nil {
+		return err
+	}
+
+	_, err = collection.InsertOne(context.TODO(), objectBSON)
+	if err != nil {
+		return fmt.Errorf("mongo #create: %w", err)
+	}
+
+	return nil
+}
+
+func getCollection(collectionName string) (*mongo.Collection, error) {
+	if connection.MongoInstace.Database == nil {
+		return nil, ErrDatabaseNotInitialized
+	}
+	return connection.MongoInstace.Database.Collection(collectionName), nil
+}
+
+func dataToBSON(data interface{}) (bson.M, error) {
+	dataMarshal, err := bson.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("convert data: %w", err)
+	}
+
+	var dataBSON bson.M
+	if err := bson.Unmarshal(dataMarshal, &dataBSON); err != nil {
+		return nil, fmt.Errorf("convert data: %w", err)
+	}
+
+	return dataBSON, nil
+}
