@@ -11,6 +11,7 @@ import (
 )
 
 var ErrConnectionNotInitialized = errors.New("connection was not initialized")
+var ErrEmptyCollection = errors.New("collection empty")
 
 func Create(collectionName string, object interface{}) error {
 	collection, err := getCollection(collectionName)
@@ -27,6 +28,32 @@ func Create(collectionName string, object interface{}) error {
 	if err != nil {
 		return fmt.Errorf("mongo #create: %w", err)
 	}
+
+	return nil
+}
+
+func First(collectionName string, i interface{}) error {
+	collection, err := getCollection(collectionName)
+	if err != nil {
+		return err
+	}
+
+	cursor, err := collection.Find(context.TODO(), bson.D{{}})
+	if err != nil {
+		return fmt.Errorf("db first: %w", err)
+	}
+
+	var instanceMap map[string]interface{}
+	if cursor.Next(context.TODO()) {
+		err = bson.Unmarshal(cursor.Current, &instanceMap)
+		if err != nil {
+			return fmt.Errorf("db first: %w", err)
+		}
+	} else {
+		return fmt.Errorf("db first: %w", ErrEmptyCollection)
+	}
+
+	convertMapToStruct(instanceMap, i)
 
 	return nil
 }

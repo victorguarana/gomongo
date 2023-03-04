@@ -33,6 +33,14 @@ func main() {
 		panic(err)
 	}
 
+	// Example: Get first document
+	carro = Carro{}
+	err = mongo.First(carroCollectionName, &carro)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(carro)
+
 	// Example: List documents on Collection
 	listaCarros, err := mongo.All(carroCollectionName)
 	if err != nil {
