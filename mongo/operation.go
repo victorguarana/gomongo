@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var ErrDatabaseNotInitialized = errors.New("database was not initialized")
+var ErrConnectionNotInitialized = errors.New("connection was not initialized")
 
 func Create(collectionName string, object interface{}) error {
 	collection, err := getCollection(collectionName)
@@ -33,7 +33,7 @@ func Create(collectionName string, object interface{}) error {
 
 func getCollection(collectionName string) (*mongo.Collection, error) {
 	if connection.MongoInstace.Database == nil {
-		return nil, ErrDatabaseNotInitialized
+		return nil, ErrConnectionNotInitialized
 	}
 	return connection.MongoInstace.Database.Collection(collectionName), nil
 }
