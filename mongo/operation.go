@@ -31,6 +31,30 @@ func Create(collectionName string, object interface{}) error {
 	return nil
 }
 
+func All(collectionName string) (bson.A, error) {
+	collection, err := getCollection(collectionName)
+	if err != nil {
+		return nil, err
+	}
+
+	cursor, err := collection.Find(context.TODO(), bson.D{{}})
+	if err != nil {
+		return nil, fmt.Errorf("db all: %w", err)
+	}
+
+	var allBSON bson.A
+	for cursor.Next(context.TODO()) {
+		var instanceBSON bson.M
+		err = bson.Unmarshal(cursor.Current, &instanceBSON)
+		if err != nil {
+			return nil, fmt.Errorf("db all: %w", err)
+		}
+		allBSON = append(allBSON, instanceBSON)
+	}
+
+	return allBSON, nil
+}
+
 func getCollection(collectionName string) (*mongo.Collection, error) {
 	if connection.MongoInstace.Database == nil {
 		return nil, ErrConnectionNotInitialized
