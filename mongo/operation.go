@@ -40,17 +40,17 @@ func First(collectionName string, i interface{}) error {
 
 	cursor, err := collection.Find(context.TODO(), bson.D{{}})
 	if err != nil {
-		return fmt.Errorf("db first: %w", err)
+		return fmt.Errorf("mongo first: %w", err)
 	}
 
 	var instanceMap map[string]interface{}
 	if cursor.Next(context.TODO()) {
 		err = bson.Unmarshal(cursor.Current, &instanceMap)
 		if err != nil {
-			return fmt.Errorf("db first: %w", err)
+			return fmt.Errorf("mongo first: %w", err)
 		}
 	} else {
-		return fmt.Errorf("db first: %w", ErrEmptyCollection)
+		return fmt.Errorf("mongo first: %w", ErrEmptyCollection)
 	}
 
 	convertMapToStruct(instanceMap, i)
@@ -66,7 +66,7 @@ func All(collectionName string) (bson.A, error) {
 
 	cursor, err := collection.Find(context.TODO(), bson.D{{}})
 	if err != nil {
-		return nil, fmt.Errorf("db all: %w", err)
+		return nil, fmt.Errorf("mongo all: %w", err)
 	}
 
 	var allBSON bson.A
@@ -74,7 +74,7 @@ func All(collectionName string) (bson.A, error) {
 		var instanceBSON bson.M
 		err = bson.Unmarshal(cursor.Current, &instanceBSON)
 		if err != nil {
-			return nil, fmt.Errorf("db all: %w", err)
+			return nil, fmt.Errorf("mongo all: %w", err)
 		}
 		allBSON = append(allBSON, instanceBSON)
 	}
