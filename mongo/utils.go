@@ -24,6 +24,20 @@ func convertMapToStruct(m map[string]interface{}, s interface{}) {
 	}
 }
 
+func InterfaceToStruct(in interface{}, out interface{}) error {
+	marshal, err := bson.Marshal(in)
+	if err != nil {
+		return err
+	}
+
+	err = bson.Unmarshal(marshal, out)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func dataToBSON(data interface{}) (bson.M, error) {
 	dataMarshal, err := bson.Marshal(data)
 	if err != nil {

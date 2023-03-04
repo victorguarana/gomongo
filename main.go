@@ -28,23 +28,40 @@ func main() {
 		Ano:    2022,
 	}
 
-	err = mongo.Create(carroCollectionName, carro)
+	err = mongo.Create(carroCollectionName, &carro)
 	if err != nil {
 		panic(err)
 	}
 
 	// Example: Get first document
 	carro = Carro{}
-	err = mongo.First(carroCollectionName, &carro)
+	carroInterface, err := mongo.First(carroCollectionName)
 	if err != nil {
 		panic(err)
 	}
+
+	err = mongo.InterfaceToStruct(carroInterface, &carro)
+	if err != nil {
+		panic(err)
+	}
+
 	fmt.Println(carro)
 
 	// Example: List documents on Collection
-	listaCarros, err := mongo.All(carroCollectionName)
+	listaCarrosInterface, err := mongo.All(carroCollectionName)
 	if err != nil {
 		panic(err)
+	}
+
+	var listaCarros []Carro
+	for _, value := range listaCarrosInterface {
+		var c Carro
+		err = mongo.InterfaceToStruct(value, &c)
+		if err != nil {
+			panic(err)
+		}
+
+		listaCarros = append(listaCarros, c)
 	}
 	fmt.Println(listaCarros)
 }
