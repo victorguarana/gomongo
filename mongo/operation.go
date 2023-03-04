@@ -32,33 +32,31 @@ func Create(collectionName string, object interface{}) error {
 	return nil
 }
 
-func First(collectionName string, i interface{}) error {
+func First(collectionName string) (interface{}, error) {
 	collection, err := getCollection(collectionName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cursor, err := collection.Find(context.TODO(), bson.D{{}})
 	if err != nil {
-		return fmt.Errorf("mongo first: %w", err)
+		return nil, fmt.Errorf("mongo first: %w", err)
 	}
 
-	var instanceMap map[string]interface{}
+	var instance interface{}
 	if cursor.Next(context.TODO()) {
-		err = bson.Unmarshal(cursor.Current, &instanceMap)
+		err = bson.Unmarshal(cursor.Current, &instance)
 		if err != nil {
-			return fmt.Errorf("mongo first: %w", err)
+			return nil, fmt.Errorf("mongo first: %w", err)
 		}
 	} else {
-		return fmt.Errorf("mongo first: %w", ErrEmptyCollection)
+		return nil, fmt.Errorf("mongo first: %w", ErrEmptyCollection)
 	}
 
-	convertMapToStruct(instanceMap, i)
-
-	return nil
+	return instance, nil
 }
 
-func All(collectionName string) (bson.A, error) {
+func All(collectionName string) ([]interface{}, error) {
 	collection, err := getCollection(collectionName)
 	if err != nil {
 		return nil, err
@@ -69,17 +67,17 @@ func All(collectionName string) (bson.A, error) {
 		return nil, fmt.Errorf("mongo all: %w", err)
 	}
 
-	var allBSON bson.A
+	var all []interface{}
 	for cursor.Next(context.TODO()) {
-		var instanceBSON bson.M
-		err = bson.Unmarshal(cursor.Current, &instanceBSON)
+		var instance interface{}
+		err = bson.Unmarshal(cursor.Current, &instance)
 		if err != nil {
 			return nil, fmt.Errorf("mongo all: %w", err)
 		}
-		allBSON = append(allBSON, instanceBSON)
+		all = append(all, instance)
 	}
 
-	return allBSON, nil
+	return all, nil
 }
 
 func getCollection(collectionName string) (*mongo.Collection, error) {
