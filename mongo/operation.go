@@ -19,12 +19,7 @@ func Create(collectionName string, object interface{}) error {
 		return err
 	}
 
-	objectBSON, err := dataToBSON(object)
-	if err != nil {
-		return err
-	}
-
-	_, err = collection.InsertOne(context.TODO(), objectBSON)
+	_, err = collection.InsertOne(context.TODO(), object)
 	if err != nil {
 		return fmt.Errorf("mongo #create: %w", err)
 	}
