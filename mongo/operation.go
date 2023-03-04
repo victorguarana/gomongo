@@ -88,17 +88,3 @@ func getCollection(collectionName string) (*mongo.Collection, error) {
 	}
 	return connection.MongoInstace.Database.Collection(collectionName), nil
 }
-
-func dataToBSON(data interface{}) (bson.M, error) {
-	dataMarshal, err := bson.Marshal(data)
-	if err != nil {
-		return nil, fmt.Errorf("convert data: %w", err)
-	}
-
-	var dataBSON bson.M
-	if err := bson.Unmarshal(dataMarshal, &dataBSON); err != nil {
-		return nil, fmt.Errorf("convert data: %w", err)
-	}
-
-	return dataBSON, nil
-}

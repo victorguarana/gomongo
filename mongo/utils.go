@@ -1,6 +1,11 @@
 package mongo
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+
+	"go.mongodb.org/mongo-driver/bson"
+)
 
 // TODO: Remove case sensitive for fields
 // Because public and private fields have diferent names inside struct
@@ -17,4 +22,18 @@ func convertMapToStruct(m map[string]interface{}, s interface{}) {
 			}
 		}
 	}
+}
+
+func dataToBSON(data interface{}) (bson.M, error) {
+	dataMarshal, err := bson.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("convert data: %w", err)
+	}
+
+	var dataBSON bson.M
+	if err := bson.Unmarshal(dataMarshal, &dataBSON); err != nil {
+		return nil, fmt.Errorf("convert data: %w", err)
+	}
+
+	return dataBSON, nil
 }
