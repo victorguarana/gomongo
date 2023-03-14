@@ -13,6 +13,30 @@ import (
 var ErrConnectionNotInitialized = errors.New("connection was not initialized")
 var ErrEmptyCollection = errors.New("collection empty")
 
+func All(collectionName string) ([]interface{}, error) {
+	collection, err := getCollection(collectionName)
+	if err != nil {
+		return nil, err
+	}
+
+	cursor, err := collection.Find(context.TODO(), bson.D{{}})
+	if err != nil {
+		return nil, fmt.Errorf("mongo all: %w", err)
+	}
+
+	var all []interface{}
+	for cursor.Next(context.TODO()) {
+		var instance interface{}
+		err = bson.Unmarshal(cursor.Current, &instance)
+		if err != nil {
+			return nil, fmt.Errorf("mongo all: %w", err)
+		}
+		all = append(all, instance)
+	}
+
+	return all, nil
+}
+
 func Create(collectionName string, object interface{}) error {
 	collection, err := getCollection(collectionName)
 	if err != nil {
@@ -49,30 +73,6 @@ func First(collectionName string) (interface{}, error) {
 	}
 
 	return instance, nil
-}
-
-func All(collectionName string) ([]interface{}, error) {
-	collection, err := getCollection(collectionName)
-	if err != nil {
-		return nil, err
-	}
-
-	cursor, err := collection.Find(context.TODO(), bson.D{{}})
-	if err != nil {
-		return nil, fmt.Errorf("mongo all: %w", err)
-	}
-
-	var all []interface{}
-	for cursor.Next(context.TODO()) {
-		var instance interface{}
-		err = bson.Unmarshal(cursor.Current, &instance)
-		if err != nil {
-			return nil, fmt.Errorf("mongo all: %w", err)
-		}
-		all = append(all, instance)
-	}
-
-	return all, nil
 }
 
 func getCollection(collectionName string) (*mongo.Collection, error) {
