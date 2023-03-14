@@ -4,17 +4,20 @@ import (
 	"fmt"
 	"gomongo/database/connection"
 	"gomongo/database/mongo"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var carroCollectionName = "carros"
 
 type Carro struct {
+	ID     primitive.ObjectID
 	Marca  string
 	Modelo string
 	Ano    int
 }
 
-// Example of how to use
+// Example of how to use gomongo
 func main() {
 	err := connection.Init("mongodb://localhost:27017", "Loja")
 	if err != nil {
@@ -28,10 +31,11 @@ func main() {
 		Ano:    2022,
 	}
 
-	err = mongo.Create(carroCollectionName, &carro)
+	id, err := mongo.Create(carroCollectionName, &carro)
 	if err != nil {
 		panic(err)
 	}
+	carro.ID = id
 
 	// Example: Get first document
 	carro = Carro{}

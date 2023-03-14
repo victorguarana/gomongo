@@ -7,6 +7,7 @@ import (
 	"gomongo/database/connection"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -37,18 +38,22 @@ func All(collectionName string) ([]interface{}, error) {
 	return all, nil
 }
 
-func Create(collectionName string, object interface{}) error {
+func Create(collectionName string, object interface{}) (primitive.ObjectID, error) {
+	var id primitive.ObjectID
 	collection, err := getCollection(collectionName)
 	if err != nil {
-		return err
+		return id, err
 	}
 
-	_, err = collection.InsertOne(context.TODO(), object)
+	result, err := collection.InsertOne(context.TODO(), object)
 	if err != nil {
-		return fmt.Errorf("mongo #create: %w", err)
+		err = fmt.Errorf("mongo #create: %w", err)
+		return id, err
 	}
 
-	return nil
+	id = result.InsertedID.(primitive.ObjectID)
+
+	return id, nil
 }
 
 func First(collectionName string) (interface{}, error) {
