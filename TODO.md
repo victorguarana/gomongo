@@ -3,8 +3,7 @@
 ## Top Priority
 - `mongo.Where(collectionName string, filter interface{})`?
 - `mongo.Find(collectionName string, filter interface{})`?
-- `mongo.UpdateOne(collectionName string, i interface{})`
-- `mongo.DeleteOne(collectionName string, object interface{})`
+- `mongo.Count(collectionName string)`?
 
 ---
 

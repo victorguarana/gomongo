@@ -38,18 +38,41 @@ func main() {
 	carro.ID = id
 
 	// Example: Get first document
-	carro = Carro{}
+	firstCarro := Carro{}
 	carroInterface, err := mongo.First(carroCollectionName)
 	if err != nil {
 		panic(err)
 	}
 
-	err = mongo.InterfaceToStruct(carroInterface, &carro)
+	err = mongo.InterfaceToStruct(carroInterface, &firstCarro)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(carro)
+	fmt.Println(firstCarro)
+
+	// Example: Update one document on Collection
+	firstCarro.Ano = 2023
+	firstCarro.Modelo = "Civic"
+	err = mongo.UpdateByID(carroCollectionName, firstCarro)
+	if err != nil {
+		panic(err)
+	}
+
+	// Example: Delete one document on Collection
+	deleteCarro := Carro{
+		Marca:  "Fiat",
+		Modelo: "Argo",
+		Ano:    2022,
+	}
+
+	deleteID, _ := mongo.Create(carroCollectionName, &deleteCarro)
+	deleteCarro.ID = deleteID
+
+	err = mongo.DeleteByID(carroCollectionName, deleteCarro)
+	if err != nil {
+		panic(err)
+	}
 
 	// Example: List documents on Collection
 	listaCarrosInterface, err := mongo.All(carroCollectionName)

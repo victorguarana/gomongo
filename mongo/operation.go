@@ -13,6 +13,9 @@ import (
 
 var ErrConnectionNotInitialized = errors.New("connection was not initialized")
 var ErrEmptyCollection = errors.New("collection empty")
+var ErrNothingDeleted = errors.New("nothing was deleted")
+var ErrNothingFound = errors.New("nothing was found")
+var ErrIDNotExist = errors.New("id must exist")
 
 func All(collectionName string) ([]interface{}, error) {
 	collection, err := getCollection(collectionName)
@@ -45,7 +48,14 @@ func Create(collectionName string, object interface{}) (primitive.ObjectID, erro
 		return id, err
 	}
 
-	result, err := collection.InsertOne(context.TODO(), object)
+	bson, err := dataToBSON(object)
+	if err != nil {
+		return id, err
+	}
+
+	delete(bson, "id")
+
+	result, err := collection.InsertOne(context.TODO(), bson)
 	if err != nil {
 		err = fmt.Errorf("mongo #create: %w", err)
 		return id, err
@@ -54,6 +64,32 @@ func Create(collectionName string, object interface{}) (primitive.ObjectID, erro
 	id = result.InsertedID.(primitive.ObjectID)
 
 	return id, nil
+}
+
+func DeleteByID(collectionName string, object interface{}) error {
+	collection, err := getCollection(collectionName)
+	if err != nil {
+		return err
+	}
+
+	objectBSON, err := dataToBSON(object)
+	if err != nil {
+		return err
+	}
+
+	objectBSON["_id"] = objectBSON["id"]
+	delete(objectBSON, "id")
+
+	result, err := collection.DeleteOne(context.TODO(), objectBSON)
+	if err != nil {
+		return fmt.Errorf("mongo delete by id: %w", err)
+	}
+
+	if result.DeletedCount == 0 {
+		return fmt.Errorf("mongo delete by id: %w", ErrNothingDeleted)
+	}
+
+	return nil
 }
 
 func First(collectionName string) (interface{}, error) {
@@ -78,6 +114,37 @@ func First(collectionName string) (interface{}, error) {
 	}
 
 	return instance, nil
+}
+
+func UpdateByID(collectionName string, object interface{}) error {
+	collection, err := getCollection(collectionName)
+	if err != nil {
+		return err
+	}
+
+	objectBSON, err := dataToBSON(object)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": objectBSON["id"]}
+
+	delete(objectBSON, "id")
+
+	update := bson.M{
+		"$set": objectBSON,
+	}
+
+	result, err := collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return fmt.Errorf("mongo update by id: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("mongo update by id: %w", ErrNothingFound)
+	}
+
+	return nil
 }
 
 func getCollection(collectionName string) (*mongo.Collection, error) {
