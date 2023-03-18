@@ -41,8 +41,8 @@ func All(collectionName string) ([]interface{}, error) {
 	return all, nil
 }
 
-func Create(collectionName string, object interface{}) (primitive.ObjectID, error) {
-	var id primitive.ObjectID
+func Create(collectionName string, object interface{}) (string, error) {
+	var id string
 	collection, err := getCollection(collectionName)
 	if err != nil {
 		return id, err
@@ -61,7 +61,7 @@ func Create(collectionName string, object interface{}) (primitive.ObjectID, erro
 		return id, err
 	}
 
-	id = result.InsertedID.(primitive.ObjectID)
+	id = result.InsertedID.(primitive.ObjectID).Hex()
 
 	return id, nil
 }
@@ -92,10 +92,18 @@ func DeleteByID(collectionName string, object interface{}) error {
 		return err
 	}
 
-	objectBSON["_id"] = objectBSON["id"]
-	delete(objectBSON, "id")
+	if objectBSON["id"] == nil {
+		return ErrIDNotExist
+	}
 
-	result, err := collection.DeleteOne(context.TODO(), objectBSON)
+	id, err := primitive.ObjectIDFromHex(objectBSON["id"].(string))
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": id}
+
+	result, err := collection.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		return fmt.Errorf("mongo delete by id: %w", err)
 	}
@@ -142,10 +150,18 @@ func UpdateByID(collectionName string, object interface{}) error {
 		return err
 	}
 
-	filter := bson.M{"_id": objectBSON["id"]}
+	if objectBSON["id"] == nil {
+		return ErrIDNotExist
+	}
+
+	id, err := primitive.ObjectIDFromHex(objectBSON["id"].(string))
+	if err != nil {
+		return err
+	}
 
 	delete(objectBSON, "id")
 
+	filter := bson.M{"_id": id}
 	update := bson.M{
 		"$set": objectBSON,
 	}

@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"gomongo/database/connection"
 	"gomongo/database/mongo"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var carroCollectionName = "carros"
 
 type Carro struct {
-	ID     primitive.ObjectID
+	ID     string
 	Marca  string
 	Modelo string
 	Ano    int
