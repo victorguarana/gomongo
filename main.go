@@ -59,6 +59,14 @@ func main() {
 		panic(err)
 	}
 
+	// Example: Count all documents
+	count, err := mongo.Count(carroCollectionName)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Total de documentos no mongo:", count)
+
 	// Example: Delete one document on Collection
 	deleteCarro := Carro{
 		Marca:  "Fiat",

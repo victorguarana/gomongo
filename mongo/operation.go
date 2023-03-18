@@ -66,6 +66,21 @@ func Create(collectionName string, object interface{}) (primitive.ObjectID, erro
 	return id, nil
 }
 
+func Count(collectionName string) (int, error) {
+	collection, err := getCollection(collectionName)
+	if err != nil {
+		return 0, err
+	}
+
+	filter := bson.M{}
+	count, err := collection.CountDocuments(context.TODO(), filter)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(count), nil
+}
+
 func DeleteByID(collectionName string, object interface{}) error {
 	collection, err := getCollection(collectionName)
 	if err != nil {
