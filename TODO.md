@@ -3,7 +3,6 @@
 ## Top Priority
 - `mongo.Where(collectionName string, filter interface{})`?
 - `mongo.Find(collectionName string, filter interface{})`?
-- `mongo.Count(collectionName string)`?
 
 ---
 

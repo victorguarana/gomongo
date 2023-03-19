@@ -6,6 +6,10 @@ import (
 	"gomongo/database/mongo"
 )
 
+///////////////////////////////////
+// Example of how to use gomongo //
+///////////////////////////////////
+
 var carroCollectionName = "carros"
 
 type Carro struct {
@@ -15,27 +19,30 @@ type Carro struct {
 	Ano    int
 }
 
-// Example of how to use gomongo
 func main() {
 	err := connection.Init("mongodb://localhost:27017", "Loja")
 	if err != nil {
 		panic(err)
 	}
 
-	// Example: Create document
+	//////////////////////////////
+	// Example: Create document //
+	//////////////////////////////
 	carro := Carro{
 		Marca:  "Honda",
 		Modelo: "City",
 		Ano:    2022,
 	}
 
-	id, err := mongo.Create(carroCollectionName, &carro)
+	carro.ID, err = mongo.Create(carroCollectionName, &carro)
 	if err != nil {
 		panic(err)
 	}
-	carro.ID = id
+	fmt.Println(carro)
 
-	// Example: Get first document
+	/////////////////////////////////
+	// Example: Get first document //
+	/////////////////////////////////
 	firstCarro := Carro{}
 	carroInterface, err := mongo.First(carroCollectionName)
 	if err != nil {
@@ -49,7 +56,9 @@ func main() {
 
 	fmt.Println(firstCarro)
 
-	// Example: Update one document on Collection
+	////////////////////////////////////////////////
+	// Example: Update one document on Collection //
+	////////////////////////////////////////////////
 	firstCarro.Ano = 2023
 	firstCarro.Modelo = "Civic"
 	err = mongo.UpdateByID(carroCollectionName, firstCarro)
@@ -57,15 +66,18 @@ func main() {
 		panic(err)
 	}
 
-	// Example: Count all documents
+	//////////////////////////////////
+	// Example: Count all documents //
+	//////////////////////////////////
 	count, err := mongo.Count(carroCollectionName)
 	if err != nil {
 		panic(err)
 	}
-
 	fmt.Println("Total de documentos no mongo:", count)
 
-	// Example: Delete one document on Collection
+	////////////////////////////////////////////////
+	// Example: Delete one document on Collection //
+	////////////////////////////////////////////////
 	deleteCarro := Carro{
 		Marca:  "Fiat",
 		Modelo: "Argo",
@@ -80,7 +92,9 @@ func main() {
 		panic(err)
 	}
 
-	// Example: List documents on Collection
+	///////////////////////////////////////////
+	// Example: List documents on Collection //
+	///////////////////////////////////////////
 	listaCarrosInterface, err := mongo.All(carroCollectionName)
 	if err != nil {
 		panic(err)
