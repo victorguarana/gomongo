@@ -14,8 +14,8 @@ import (
 var ErrConnectionNotInitialized = errors.New("connection was not initialized")
 var ErrEmptyCollection = errors.New("collection empty")
 var ErrNothingDeleted = errors.New("nothing was deleted")
-var ErrNothingFound = errors.New("nothing was found")
 var ErrIDNotExist = errors.New("id must exist")
+var ErrDocumentNotFound = errors.New("document not found")
 
 func All(collectionName string) ([]interface{}, error) {
 	collection, err := getCollection(collectionName)
@@ -115,6 +115,29 @@ func DeleteByID(collectionName string, object interface{}) error {
 	return nil
 }
 
+func FindOne(collectionName string, filter interface{}) (interface{}, error) {
+	collection, err := getCollection(collectionName)
+	if err != nil {
+		return nil, err
+	}
+
+	result := collection.FindOne(context.TODO(), filter)
+	if result.Err() != nil {
+		if errors.Is(result.Err(), mongo.ErrNoDocuments) {
+			return nil, fmt.Errorf("mongo find one: %w", ErrDocumentNotFound)
+		}
+		return nil, fmt.Errorf("mongo find one: %s", result.Err().Error())
+	}
+
+	var instance interface{}
+	err = result.Decode(&instance)
+	if err != nil {
+		return nil, err
+	}
+
+	return instance, nil
+}
+
 func First(collectionName string) (interface{}, error) {
 	collection, err := getCollection(collectionName)
 	if err != nil {
@@ -172,7 +195,7 @@ func UpdateByID(collectionName string, object interface{}) error {
 	}
 
 	if result.MatchedCount == 0 {
-		return fmt.Errorf("mongo update by id: %w", ErrNothingFound)
+		return fmt.Errorf("mongo update by id: %w", ErrDocumentNotFound)
 	}
 
 	return nil

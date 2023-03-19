@@ -92,6 +92,22 @@ func main() {
 		panic(err)
 	}
 
+	//////////////////////////////////
+	// Example: Search with FindOne //
+	//////////////////////////////////
+	whereFilter := map[string]string{"marca": "Honda"}
+	findCarroInterface, err := mongo.FindOne(carroCollectionName, whereFilter)
+	if err != nil {
+		panic(err)
+	}
+
+	var findCarro Carro
+	err = mongo.InterfaceToStruct(findCarroInterface, &findCarro)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(findCarro)
+
 	///////////////////////////////////////////
 	// Example: List documents on Collection //
 	///////////////////////////////////////////
