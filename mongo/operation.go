@@ -118,29 +118,8 @@ func FindOne(collectionName string, filter interface{}) (interface{}, error) {
 	return instance, nil
 }
 
-// TODO: Use FindOne instead of Find?
 func First(collectionName string) (interface{}, error) {
-	collection, err := getCollection(collectionName)
-	if err != nil {
-		return nil, err
-	}
-
-	cursor, err := collection.Find(context.TODO(), bson.D{{}})
-	if err != nil {
-		return nil, fmt.Errorf("mongo first: %w", err)
-	}
-
-	var instance interface{}
-	if cursor.Next(context.TODO()) {
-		err = bson.Unmarshal(cursor.Current, &instance)
-		if err != nil {
-			return nil, fmt.Errorf("mongo first: %w", err)
-		}
-	} else {
-		return nil, fmt.Errorf("mongo first: %w", ErrEmptyCollection)
-	}
-
-	return instance, nil
+	return FindOne(collectionName, map[string]string{})
 }
 
 func UpdateByID(collectionName string, object interface{}) error {

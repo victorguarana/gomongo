@@ -1,9 +1,8 @@
 # TODO:
 
 ## Top Priority
-- `mongo.Where(collectionName string, filter interface{})`?
-
----
+- Add tests
+- Add readme
 
 ## Upgrades
 - `mongo.All(collectionName string, i interface{})`? -> Receber uma interface para poder retornar no formato correto.
