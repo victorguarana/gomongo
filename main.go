@@ -38,7 +38,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(carro)
+	fmt.Println("Created:", carro)
 
 	/////////////////////////////////
 	// Example: Get first document //
@@ -54,17 +54,34 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(firstCarro)
+	fmt.Println("First:", firstCarro)
+
+	//////////////////////////////////
+	// Example: Search with FindOne //
+	//////////////////////////////////
+	findFilter := map[string]string{"modelo": "City"}
+	findCarroInterface, err := mongo.FindOne(carroCollectionName, findFilter)
+	if err != nil {
+		panic(err)
+	}
+
+	var findCarro Carro
+	err = mongo.InterfaceToStruct(findCarroInterface, &findCarro)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Find:", findCarro)
 
 	////////////////////////////////////////////////
 	// Example: Update one document on Collection //
 	////////////////////////////////////////////////
-	firstCarro.Ano = 2023
-	firstCarro.Modelo = "Civic"
-	err = mongo.UpdateByID(carroCollectionName, firstCarro)
+	findCarro.Ano = 2023
+	findCarro.Modelo = "Civic"
+	err = mongo.UpdateByID(carroCollectionName, findCarro)
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("Update:", findCarro)
 
 	//////////////////////////////////
 	// Example: Count all documents //
@@ -73,7 +90,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Total de documentos no mongo:", count)
+	fmt.Println("Count:", count)
 
 	////////////////////////////////////////////////
 	// Example: Delete one document on Collection //
@@ -92,21 +109,7 @@ func main() {
 		panic(err)
 	}
 
-	//////////////////////////////////
-	// Example: Search with FindOne //
-	//////////////////////////////////
-	whereFilter := map[string]string{"marca": "Honda"}
-	findCarroInterface, err := mongo.FindOne(carroCollectionName, whereFilter)
-	if err != nil {
-		panic(err)
-	}
-
-	var findCarro Carro
-	err = mongo.InterfaceToStruct(findCarroInterface, &findCarro)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(findCarro)
+	fmt.Println("Deleted:", deleteCarro)
 
 	///////////////////////////////////////////
 	// Example: List documents on Collection //
@@ -126,5 +129,25 @@ func main() {
 
 		listaCarros = append(listaCarros, c)
 	}
-	fmt.Println(listaCarros)
+	fmt.Println("All:", listaCarros)
+
+	////////////////////////////////
+	// Example: Search with Where //
+	////////////////////////////////
+	whereCarrosInterface, err := mongo.Where(carroCollectionName, map[string]string{"marca": "Honda"})
+	if err != nil {
+		panic(err)
+	}
+
+	var whereCarros []Carro
+	for _, value := range whereCarrosInterface {
+		var c Carro
+		err = mongo.InterfaceToStruct(value, &c)
+		if err != nil {
+			panic(err)
+		}
+
+		whereCarros = append(whereCarros, c)
+	}
+	fmt.Println("Where:", whereCarros)
 }

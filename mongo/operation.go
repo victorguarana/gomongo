@@ -18,27 +18,7 @@ var ErrIDNotExist = errors.New("id must exist")
 var ErrDocumentNotFound = errors.New("document not found")
 
 func All(collectionName string) ([]interface{}, error) {
-	collection, err := getCollection(collectionName)
-	if err != nil {
-		return nil, err
-	}
-
-	cursor, err := collection.Find(context.TODO(), bson.D{{}})
-	if err != nil {
-		return nil, fmt.Errorf("mongo all: %w", err)
-	}
-
-	var all []interface{}
-	for cursor.Next(context.TODO()) {
-		var instance interface{}
-		err = bson.Unmarshal(cursor.Current, &instance)
-		if err != nil {
-			return nil, fmt.Errorf("mongo all: %w", err)
-		}
-		all = append(all, instance)
-	}
-
-	return all, nil
+	return Where(collectionName, bson.M{})
 }
 
 func Create(collectionName string, object interface{}) (string, error) {
@@ -138,6 +118,7 @@ func FindOne(collectionName string, filter interface{}) (interface{}, error) {
 	return instance, nil
 }
 
+// TODO: Use FindOne instead of Find?
 func First(collectionName string) (interface{}, error) {
 	collection, err := getCollection(collectionName)
 	if err != nil {
@@ -199,6 +180,30 @@ func UpdateByID(collectionName string, object interface{}) error {
 	}
 
 	return nil
+}
+
+func Where(collectionName string, filter interface{}) ([]interface{}, error) {
+	collection, err := getCollection(collectionName)
+	if err != nil {
+		return nil, err
+	}
+
+	cursor, err := collection.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, fmt.Errorf("mongo where: %w", err)
+	}
+
+	var all []interface{}
+	for cursor.Next(context.TODO()) {
+		var instance interface{}
+		err = bson.Unmarshal(cursor.Current, &instance)
+		if err != nil {
+			return nil, fmt.Errorf("mongo where: %w", err)
+		}
+		all = append(all, instance)
+	}
+
+	return all, nil
 }
 
 func getCollection(collectionName string) (*mongo.Collection, error) {
