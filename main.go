@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"gomongo/database/connection"
 	"gomongo/database/mongo"
 )
 
@@ -20,7 +19,7 @@ type Carro struct {
 }
 
 func main() {
-	err := connection.Init("mongodb://localhost:27017", "Loja")
+	err := mongo.Init("mongodb://localhost:27017", "Loja")
 	if err != nil {
 		panic(err)
 	}
