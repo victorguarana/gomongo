@@ -3,7 +3,6 @@ package mongo
 import (
 	"context"
 	"errors"
-	"fmt"
 	"gomongo/database/connection"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -37,7 +36,6 @@ func Create(collectionName string, object interface{}) (string, error) {
 
 	result, err := collection.InsertOne(context.TODO(), bson)
 	if err != nil {
-		err = fmt.Errorf("mongo #create: %w", err)
 		return id, err
 	}
 
@@ -61,35 +59,29 @@ func Count(collectionName string) (int, error) {
 	return int(count), nil
 }
 
-func DeleteByID(collectionName string, object interface{}) error {
+func DeleteID(collectionName string, id string) error {
+	if id == "" {
+		return ErrIDNotExist
+	}
+
 	collection, err := getCollection(collectionName)
 	if err != nil {
 		return err
 	}
 
-	objectBSON, err := dataToBSON(object)
+	idPrimitive, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
 
-	if objectBSON["id"] == nil {
-		return ErrIDNotExist
-	}
-
-	id, err := primitive.ObjectIDFromHex(objectBSON["id"].(string))
-	if err != nil {
-		return err
-	}
-
-	filter := bson.M{"_id": id}
-
+	filter := bson.M{"_id": idPrimitive}
 	result, err := collection.DeleteOne(context.TODO(), filter)
 	if err != nil {
-		return fmt.Errorf("mongo delete by id: %w", err)
+		return err
 	}
 
 	if result.DeletedCount == 0 {
-		return fmt.Errorf("mongo delete by id: %w", ErrNothingDeleted)
+		return ErrNothingDeleted
 	}
 
 	return nil
@@ -104,9 +96,9 @@ func FindOne(collectionName string, filter interface{}) (interface{}, error) {
 	result := collection.FindOne(context.TODO(), filter)
 	if result.Err() != nil {
 		if errors.Is(result.Err(), mongo.ErrNoDocuments) {
-			return nil, fmt.Errorf("mongo find one: %w", ErrDocumentNotFound)
+			return nil, ErrDocumentNotFound
 		}
-		return nil, fmt.Errorf("mongo find one: %s", result.Err().Error())
+		return nil, result.Err()
 	}
 
 	var instance interface{}
@@ -122,8 +114,17 @@ func First(collectionName string) (interface{}, error) {
 	return FindOne(collectionName, map[string]string{})
 }
 
-func UpdateByID(collectionName string, object interface{}) error {
+func UpdateID(collectionName string, id string, object interface{}) error {
+	if id == "" {
+		return ErrIDNotExist
+	}
+
 	collection, err := getCollection(collectionName)
+	if err != nil {
+		return err
+	}
+
+	idPrimitive, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
@@ -132,30 +133,20 @@ func UpdateByID(collectionName string, object interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	if objectBSON["id"] == nil {
-		return ErrIDNotExist
-	}
-
-	id, err := primitive.ObjectIDFromHex(objectBSON["id"].(string))
-	if err != nil {
-		return err
-	}
-
 	delete(objectBSON, "id")
 
-	filter := bson.M{"_id": id}
+	filter := bson.M{"_id": idPrimitive}
 	update := bson.M{
 		"$set": objectBSON,
 	}
 
 	result, err := collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
-		return fmt.Errorf("mongo update by id: %w", err)
+		return err
 	}
 
 	if result.MatchedCount == 0 {
-		return fmt.Errorf("mongo update by id: %w", ErrDocumentNotFound)
+		return ErrDocumentNotFound
 	}
 
 	return nil
@@ -169,7 +160,7 @@ func Where(collectionName string, filter interface{}) ([]interface{}, error) {
 
 	cursor, err := collection.Find(context.TODO(), filter)
 	if err != nil {
-		return nil, fmt.Errorf("mongo where: %w", err)
+		return nil, err
 	}
 
 	var all []interface{}
@@ -177,7 +168,7 @@ func Where(collectionName string, filter interface{}) ([]interface{}, error) {
 		var instance interface{}
 		err = bson.Unmarshal(cursor.Current, &instance)
 		if err != nil {
-			return nil, fmt.Errorf("mongo where: %w", err)
+			return nil, err
 		}
 		all = append(all, instance)
 	}

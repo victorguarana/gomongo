@@ -77,7 +77,7 @@ func main() {
 	////////////////////////////////////////////////
 	findCarro.Ano = 2023
 	findCarro.Modelo = "Civic"
-	err = mongo.UpdateByID(carroCollectionName, findCarro)
+	err = mongo.UpdateID(carroCollectionName, findCarro.ID, findCarro)
 	if err != nil {
 		panic(err)
 	}
@@ -104,7 +104,7 @@ func main() {
 	deleteID, _ := mongo.Create(carroCollectionName, &deleteCarro)
 	deleteCarro.ID = deleteID
 
-	err = mongo.DeleteByID(carroCollectionName, deleteCarro)
+	err = mongo.DeleteID(carroCollectionName, deleteCarro.ID)
 	if err != nil {
 		panic(err)
 	}
