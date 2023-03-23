@@ -9,7 +9,7 @@ import (
 // Example of how to use gomongo //
 ///////////////////////////////////
 
-var carroCollectionName = "carros"
+var carroCollection = mongo.NewCollection("carros")
 
 type Carro struct {
 	ID     string
@@ -33,7 +33,7 @@ func main() {
 		Ano:    2022,
 	}
 
-	carro.ID, err = mongo.Create(carroCollectionName, &carro)
+	carro.ID, err = carroCollection.Create(carro)
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +43,7 @@ func main() {
 	// Example: Get first document //
 	/////////////////////////////////
 	firstCarro := Carro{}
-	carroInterface, err := mongo.First(carroCollectionName)
+	carroInterface, err := carroCollection.First()
 	if err != nil {
 		panic(err)
 	}
@@ -59,7 +59,7 @@ func main() {
 	// Example: Search with FindOne //
 	//////////////////////////////////
 	findFilter := map[string]string{"modelo": "City"}
-	findCarroInterface, err := mongo.FindOne(carroCollectionName, findFilter)
+	findCarroInterface, err := carroCollection.FindOne(findFilter)
 	if err != nil {
 		panic(err)
 	}
@@ -76,7 +76,7 @@ func main() {
 	////////////////////////////////////////////////
 	findCarro.Ano = 2023
 	findCarro.Modelo = "Civic"
-	err = mongo.UpdateID(carroCollectionName, findCarro.ID, findCarro)
+	err = carroCollection.UpdateID(findCarro.ID, findCarro)
 	if err != nil {
 		panic(err)
 	}
@@ -85,7 +85,7 @@ func main() {
 	//////////////////////////////////
 	// Example: Count all documents //
 	//////////////////////////////////
-	count, err := mongo.Count(carroCollectionName)
+	count, err := carroCollection.Count()
 	if err != nil {
 		panic(err)
 	}
@@ -100,10 +100,10 @@ func main() {
 		Ano:    2022,
 	}
 
-	deleteID, _ := mongo.Create(carroCollectionName, &deleteCarro)
+	deleteID, _ := carroCollection.Create(deleteCarro)
 	deleteCarro.ID = deleteID
 
-	err = mongo.DeleteID(carroCollectionName, deleteCarro.ID)
+	err = carroCollection.DeleteID(deleteCarro.ID)
 	if err != nil {
 		panic(err)
 	}
@@ -113,7 +113,7 @@ func main() {
 	///////////////////////////////////////////
 	// Example: List documents on Collection //
 	///////////////////////////////////////////
-	listaCarrosInterface, err := mongo.All(carroCollectionName)
+	listaCarrosInterface, err := carroCollection.All()
 	if err != nil {
 		panic(err)
 	}
@@ -133,7 +133,7 @@ func main() {
 	////////////////////////////////
 	// Example: Search with Where //
 	////////////////////////////////
-	whereCarrosInterface, err := mongo.Where(carroCollectionName, map[string]string{"marca": "Honda"})
+	whereCarrosInterface, err := carroCollection.Where(map[string]string{"marca": "Honda"})
 	if err != nil {
 		panic(err)
 	}

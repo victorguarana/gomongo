@@ -15,13 +15,36 @@ var ErrNothingDeleted = errors.New("nothing was deleted")
 var ErrIDNotExist = errors.New("id must exist")
 var ErrDocumentNotFound = errors.New("document not found")
 
-func All(collectionName string) ([]interface{}, error) {
-	return Where(collectionName, bson.M{})
+type Collection struct {
+	Name            string
+	collectionMongo *mongo.Collection
 }
 
-func Create(collectionName string, object interface{}) (string, error) {
+func NewCollection(collectionName string) Collection {
+	return Collection{Name: collectionName}
+}
+
+func (c *Collection) validate() error {
+	if c.collectionMongo != nil {
+		return nil
+	}
+
+	if mongoDatabase == nil {
+		return ErrConnectionNotInitialized
+	} else {
+		c.collectionMongo = mongoDatabase.Collection(c.Name)
+	}
+	return nil
+}
+
+func (c *Collection) All() ([]interface{}, error) {
+	return c.Where(bson.M{})
+}
+
+func (c *Collection) Create(object interface{}) (string, error) {
 	var id string
-	collection, err := getCollection(collectionName)
+
+	err := c.validate()
 	if err != nil {
 		return id, err
 	}
@@ -33,7 +56,7 @@ func Create(collectionName string, object interface{}) (string, error) {
 
 	delete(bson, "id")
 
-	result, err := collection.InsertOne(context.TODO(), bson)
+	result, err := c.collectionMongo.InsertOne(context.TODO(), bson)
 	if err != nil {
 		return id, err
 	}
@@ -43,14 +66,14 @@ func Create(collectionName string, object interface{}) (string, error) {
 	return id, nil
 }
 
-func Count(collectionName string) (int, error) {
-	collection, err := getCollection(collectionName)
+func (c *Collection) Count() (int, error) {
+	err := c.validate()
 	if err != nil {
 		return 0, err
 	}
 
 	filter := bson.M{}
-	count, err := collection.CountDocuments(context.TODO(), filter)
+	count, err := c.collectionMongo.CountDocuments(context.TODO(), filter)
 	if err != nil {
 		return 0, err
 	}
@@ -58,12 +81,12 @@ func Count(collectionName string) (int, error) {
 	return int(count), nil
 }
 
-func DeleteID(collectionName string, id string) error {
+func (c *Collection) DeleteID(id string) error {
 	if id == "" {
 		return ErrIDNotExist
 	}
 
-	collection, err := getCollection(collectionName)
+	err := c.validate()
 	if err != nil {
 		return err
 	}
@@ -74,7 +97,7 @@ func DeleteID(collectionName string, id string) error {
 	}
 
 	filter := bson.M{"_id": idPrimitive}
-	result, err := collection.DeleteOne(context.TODO(), filter)
+	result, err := c.collectionMongo.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		return err
 	}
@@ -86,13 +109,13 @@ func DeleteID(collectionName string, id string) error {
 	return nil
 }
 
-func FindOne(collectionName string, filter interface{}) (interface{}, error) {
-	collection, err := getCollection(collectionName)
+func (c *Collection) FindOne(filter interface{}) (interface{}, error) {
+	err := c.validate()
 	if err != nil {
 		return nil, err
 	}
 
-	result := collection.FindOne(context.TODO(), filter)
+	result := c.collectionMongo.FindOne(context.TODO(), filter)
 	if result.Err() != nil {
 		if errors.Is(result.Err(), mongo.ErrNoDocuments) {
 			return nil, ErrDocumentNotFound
@@ -109,16 +132,16 @@ func FindOne(collectionName string, filter interface{}) (interface{}, error) {
 	return instance, nil
 }
 
-func First(collectionName string) (interface{}, error) {
-	return FindOne(collectionName, map[string]string{})
+func (c *Collection) First() (interface{}, error) {
+	return c.FindOne(map[string]string{})
 }
 
-func UpdateID(collectionName string, id string, object interface{}) error {
+func (c *Collection) UpdateID(id string, object interface{}) error {
 	if id == "" {
 		return ErrIDNotExist
 	}
 
-	collection, err := getCollection(collectionName)
+	err := c.validate()
 	if err != nil {
 		return err
 	}
@@ -139,7 +162,7 @@ func UpdateID(collectionName string, id string, object interface{}) error {
 		"$set": objectBSON,
 	}
 
-	result, err := collection.UpdateOne(context.TODO(), filter, update)
+	result, err := c.collectionMongo.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return err
 	}
@@ -151,13 +174,13 @@ func UpdateID(collectionName string, id string, object interface{}) error {
 	return nil
 }
 
-func Where(collectionName string, filter interface{}) ([]interface{}, error) {
-	collection, err := getCollection(collectionName)
+func (c *Collection) Where(filter interface{}) ([]interface{}, error) {
+	err := c.validate()
 	if err != nil {
 		return nil, err
 	}
 
-	cursor, err := collection.Find(context.TODO(), filter)
+	cursor, err := c.collectionMongo.Find(context.TODO(), filter)
 	if err != nil {
 		return nil, err
 	}
@@ -173,11 +196,4 @@ func Where(collectionName string, filter interface{}) ([]interface{}, error) {
 	}
 
 	return all, nil
-}
-
-func getCollection(collectionName string) (*mongo.Collection, error) {
-	if mongoDatabase == nil {
-		return nil, ErrConnectionNotInitialized
-	}
-	return mongoDatabase.Collection(collectionName), nil
 }
