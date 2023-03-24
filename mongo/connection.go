@@ -1,4 +1,4 @@
-package connection
+package mongo
 
 import (
 	"context"
@@ -8,18 +8,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var errInvaidURI = errors.New("URI must be valid")
+var ErrInvaidURI = errors.New("URI must be valid")
 
-type mongoInstace struct {
-	Database *mongo.Database
-}
-
-// TODO: Private this instance
-var MongoInstace mongoInstace
+var mongoDatabase *mongo.Database
 
 func Init(uri, databaseName string) error {
 	if uri == "" {
-		return errInvaidURI
+		return ErrInvaidURI
 	}
 
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
@@ -27,9 +22,7 @@ func Init(uri, databaseName string) error {
 		return err
 	}
 
-	MongoInstace = mongoInstace{
-		Database: client.Database(databaseName),
-	}
+	mongoDatabase = client.Database(databaseName)
 
 	return nil
 }

@@ -3,7 +3,6 @@ package mongo
 import (
 	"context"
 	"errors"
-	"gomongo/database/connection"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -177,8 +176,8 @@ func Where(collectionName string, filter interface{}) ([]interface{}, error) {
 }
 
 func getCollection(collectionName string) (*mongo.Collection, error) {
-	if connection.MongoInstace.Database == nil {
+	if mongoDatabase == nil {
 		return nil, ErrConnectionNotInitialized
 	}
-	return connection.MongoInstace.Database.Collection(collectionName), nil
+	return mongoDatabase.Collection(collectionName), nil
 }
