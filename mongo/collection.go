@@ -13,12 +13,23 @@ var ErrConnectionNotInitialized = errors.New("connection was not initialized")
 var ErrIDNotExist = errors.New("id must exist")
 var ErrDocumentNotFound = errors.New("document not found")
 
+type Collection interface {
+	All() ([]interface{}, error)
+	Create(interface{}) (string, error)
+	Count() (int, error)
+	DeleteID(string) error
+	FindOne(interface{}) (interface{}, error)
+	First() (interface{}, error)
+	UpdateID(string, interface{}) error
+	Where(interface{}) ([]interface{}, error)
+}
+
 type collection struct {
 	name            string
 	mongoCollection *mongo.Collection
 }
 
-func NewCollection(collectionName string) collection {
+func NewCollection(collectionName string) Collection {
 	return collection{name: collectionName}
 }
 
@@ -29,17 +40,18 @@ func (c *collection) validate() error {
 
 	if mongoDatabase == nil {
 		return ErrConnectionNotInitialized
-	} else {
-		c.mongoCollection = mongoDatabase.Collection(c.name)
 	}
+
+	c.mongoCollection = mongoDatabase.Collection(c.name)
+
 	return nil
 }
 
-func (c *collection) All() ([]interface{}, error) {
+func (c collection) All() ([]interface{}, error) {
 	return c.Where(bson.M{})
 }
 
-func (c *collection) Create(object interface{}) (string, error) {
+func (c collection) Create(object interface{}) (string, error) {
 	var id string
 
 	err := c.validate()
@@ -64,7 +76,7 @@ func (c *collection) Create(object interface{}) (string, error) {
 	return id, nil
 }
 
-func (c *collection) Count() (int, error) {
+func (c collection) Count() (int, error) {
 	err := c.validate()
 	if err != nil {
 		return 0, err
@@ -79,7 +91,7 @@ func (c *collection) Count() (int, error) {
 	return int(count), nil
 }
 
-func (c *collection) DeleteID(id string) error {
+func (c collection) DeleteID(id string) error {
 	if id == "" {
 		return ErrIDNotExist
 	}
@@ -107,7 +119,7 @@ func (c *collection) DeleteID(id string) error {
 	return nil
 }
 
-func (c *collection) FindOne(filter interface{}) (interface{}, error) {
+func (c collection) FindOne(filter interface{}) (interface{}, error) {
 	err := c.validate()
 	if err != nil {
 		return nil, err
@@ -130,11 +142,11 @@ func (c *collection) FindOne(filter interface{}) (interface{}, error) {
 	return instance, nil
 }
 
-func (c *collection) First() (interface{}, error) {
+func (c collection) First() (interface{}, error) {
 	return c.FindOne(map[string]string{})
 }
 
-func (c *collection) UpdateID(id string, object interface{}) error {
+func (c collection) UpdateID(id string, object interface{}) error {
 	if id == "" {
 		return ErrIDNotExist
 	}
@@ -172,7 +184,7 @@ func (c *collection) UpdateID(id string, object interface{}) error {
 	return nil
 }
 
-func (c *collection) Where(filter interface{}) ([]interface{}, error) {
+func (c collection) Where(filter interface{}) ([]interface{}, error) {
 	err := c.validate()
 	if err != nil {
 		return nil, err
