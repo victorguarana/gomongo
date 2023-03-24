@@ -10,7 +10,7 @@ import (
 
 var ErrInvaidURI = errors.New("URI must be valid")
 
-var mongoDB *mongo.Database
+var mongoDatabase *mongo.Database
 
 func Init(uri, databaseName string) error {
 	if uri == "" {
@@ -22,7 +22,7 @@ func Init(uri, databaseName string) error {
 		return err
 	}
 
-	mongoDB = client.Database(databaseName)
+	mongoDatabase = client.Database(databaseName)
 
 	return nil
 }

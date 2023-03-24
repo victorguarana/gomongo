@@ -176,8 +176,8 @@ func Where(collectionName string, filter interface{}) ([]interface{}, error) {
 }
 
 func getCollection(collectionName string) (*mongo.Collection, error) {
-	if mongoDB == nil {
+	if mongoDatabase == nil {
 		return nil, ErrConnectionNotInitialized
 	}
-	return mongoDB.Collection(collectionName), nil
+	return mongoDatabase.Collection(collectionName), nil
 }
