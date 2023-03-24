@@ -10,38 +10,36 @@ import (
 )
 
 var ErrConnectionNotInitialized = errors.New("connection was not initialized")
-var ErrEmptyCollection = errors.New("collection empty")
-var ErrNothingDeleted = errors.New("nothing was deleted")
 var ErrIDNotExist = errors.New("id must exist")
 var ErrDocumentNotFound = errors.New("document not found")
 
-type Collection struct {
-	Name            string
-	collectionMongo *mongo.Collection
+type collection struct {
+	name            string
+	mongoCollection *mongo.Collection
 }
 
-func NewCollection(collectionName string) Collection {
-	return Collection{Name: collectionName}
+func NewCollection(collectionName string) collection {
+	return collection{name: collectionName}
 }
 
-func (c *Collection) validate() error {
-	if c.collectionMongo != nil {
+func (c *collection) validate() error {
+	if c.mongoCollection != nil {
 		return nil
 	}
 
 	if mongoDatabase == nil {
 		return ErrConnectionNotInitialized
 	} else {
-		c.collectionMongo = mongoDatabase.Collection(c.Name)
+		c.mongoCollection = mongoDatabase.Collection(c.name)
 	}
 	return nil
 }
 
-func (c *Collection) All() ([]interface{}, error) {
+func (c *collection) All() ([]interface{}, error) {
 	return c.Where(bson.M{})
 }
 
-func (c *Collection) Create(object interface{}) (string, error) {
+func (c *collection) Create(object interface{}) (string, error) {
 	var id string
 
 	err := c.validate()
@@ -56,7 +54,7 @@ func (c *Collection) Create(object interface{}) (string, error) {
 
 	delete(bson, "id")
 
-	result, err := c.collectionMongo.InsertOne(context.TODO(), bson)
+	result, err := c.mongoCollection.InsertOne(context.TODO(), bson)
 	if err != nil {
 		return id, err
 	}
@@ -66,14 +64,14 @@ func (c *Collection) Create(object interface{}) (string, error) {
 	return id, nil
 }
 
-func (c *Collection) Count() (int, error) {
+func (c *collection) Count() (int, error) {
 	err := c.validate()
 	if err != nil {
 		return 0, err
 	}
 
 	filter := bson.M{}
-	count, err := c.collectionMongo.CountDocuments(context.TODO(), filter)
+	count, err := c.mongoCollection.CountDocuments(context.TODO(), filter)
 	if err != nil {
 		return 0, err
 	}
@@ -81,7 +79,7 @@ func (c *Collection) Count() (int, error) {
 	return int(count), nil
 }
 
-func (c *Collection) DeleteID(id string) error {
+func (c *collection) DeleteID(id string) error {
 	if id == "" {
 		return ErrIDNotExist
 	}
@@ -97,25 +95,25 @@ func (c *Collection) DeleteID(id string) error {
 	}
 
 	filter := bson.M{"_id": idPrimitive}
-	result, err := c.collectionMongo.DeleteOne(context.TODO(), filter)
+	result, err := c.mongoCollection.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		return err
 	}
 
 	if result.DeletedCount == 0 {
-		return ErrNothingDeleted
+		return ErrDocumentNotFound
 	}
 
 	return nil
 }
 
-func (c *Collection) FindOne(filter interface{}) (interface{}, error) {
+func (c *collection) FindOne(filter interface{}) (interface{}, error) {
 	err := c.validate()
 	if err != nil {
 		return nil, err
 	}
 
-	result := c.collectionMongo.FindOne(context.TODO(), filter)
+	result := c.mongoCollection.FindOne(context.TODO(), filter)
 	if result.Err() != nil {
 		if errors.Is(result.Err(), mongo.ErrNoDocuments) {
 			return nil, ErrDocumentNotFound
@@ -132,11 +130,11 @@ func (c *Collection) FindOne(filter interface{}) (interface{}, error) {
 	return instance, nil
 }
 
-func (c *Collection) First() (interface{}, error) {
+func (c *collection) First() (interface{}, error) {
 	return c.FindOne(map[string]string{})
 }
 
-func (c *Collection) UpdateID(id string, object interface{}) error {
+func (c *collection) UpdateID(id string, object interface{}) error {
 	if id == "" {
 		return ErrIDNotExist
 	}
@@ -162,7 +160,7 @@ func (c *Collection) UpdateID(id string, object interface{}) error {
 		"$set": objectBSON,
 	}
 
-	result, err := c.collectionMongo.UpdateOne(context.TODO(), filter, update)
+	result, err := c.mongoCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return err
 	}
@@ -174,13 +172,13 @@ func (c *Collection) UpdateID(id string, object interface{}) error {
 	return nil
 }
 
-func (c *Collection) Where(filter interface{}) ([]interface{}, error) {
+func (c *collection) Where(filter interface{}) ([]interface{}, error) {
 	err := c.validate()
 	if err != nil {
 		return nil, err
 	}
 
-	cursor, err := c.collectionMongo.Find(context.TODO(), filter)
+	cursor, err := c.mongoCollection.Find(context.TODO(), filter)
 	if err != nil {
 		return nil, err
 	}
