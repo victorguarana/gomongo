@@ -10,18 +10,51 @@ import (
 )
 
 var ErrConnectionNotInitialized = errors.New("connection was not initialized")
-var ErrEmptyCollection = errors.New("collection empty")
-var ErrNothingDeleted = errors.New("nothing was deleted")
 var ErrIDNotExist = errors.New("id must exist")
 var ErrDocumentNotFound = errors.New("document not found")
 
-func All(collectionName string) ([]interface{}, error) {
-	return Where(collectionName, bson.M{})
+type Collection interface {
+	All() ([]interface{}, error)
+	Create(interface{}) (string, error)
+	Count() (int, error)
+	DeleteID(string) error
+	FindOne(interface{}) (interface{}, error)
+	First() (interface{}, error)
+	UpdateID(string, interface{}) error
+	Where(interface{}) ([]interface{}, error)
 }
 
-func Create(collectionName string, object interface{}) (string, error) {
+type collection struct {
+	name            string
+	mongoCollection *mongo.Collection
+}
+
+func NewCollection(collectionName string) Collection {
+	return &collection{name: collectionName}
+}
+
+func (c *collection) init() error {
+	if c.mongoCollection != nil {
+		return nil
+	}
+
+	if mongoDatabase == nil {
+		return ErrConnectionNotInitialized
+	}
+
+	c.mongoCollection = mongoDatabase.Collection(c.name)
+
+	return nil
+}
+
+func (c *collection) All() ([]interface{}, error) {
+	return c.Where(bson.M{})
+}
+
+func (c *collection) Create(object interface{}) (string, error) {
 	var id string
-	collection, err := getCollection(collectionName)
+
+	err := c.init()
 	if err != nil {
 		return id, err
 	}
@@ -33,7 +66,7 @@ func Create(collectionName string, object interface{}) (string, error) {
 
 	delete(bson, "id")
 
-	result, err := collection.InsertOne(context.TODO(), bson)
+	result, err := c.mongoCollection.InsertOne(context.TODO(), bson)
 	if err != nil {
 		return id, err
 	}
@@ -43,14 +76,14 @@ func Create(collectionName string, object interface{}) (string, error) {
 	return id, nil
 }
 
-func Count(collectionName string) (int, error) {
-	collection, err := getCollection(collectionName)
+func (c *collection) Count() (int, error) {
+	err := c.init()
 	if err != nil {
 		return 0, err
 	}
 
 	filter := bson.M{}
-	count, err := collection.CountDocuments(context.TODO(), filter)
+	count, err := c.mongoCollection.CountDocuments(context.TODO(), filter)
 	if err != nil {
 		return 0, err
 	}
@@ -58,12 +91,12 @@ func Count(collectionName string) (int, error) {
 	return int(count), nil
 }
 
-func DeleteID(collectionName string, id string) error {
+func (c *collection) DeleteID(id string) error {
 	if id == "" {
 		return ErrIDNotExist
 	}
 
-	collection, err := getCollection(collectionName)
+	err := c.init()
 	if err != nil {
 		return err
 	}
@@ -74,25 +107,25 @@ func DeleteID(collectionName string, id string) error {
 	}
 
 	filter := bson.M{"_id": idPrimitive}
-	result, err := collection.DeleteOne(context.TODO(), filter)
+	result, err := c.mongoCollection.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		return err
 	}
 
 	if result.DeletedCount == 0 {
-		return ErrNothingDeleted
+		return ErrDocumentNotFound
 	}
 
 	return nil
 }
 
-func FindOne(collectionName string, filter interface{}) (interface{}, error) {
-	collection, err := getCollection(collectionName)
+func (c *collection) FindOne(filter interface{}) (interface{}, error) {
+	err := c.init()
 	if err != nil {
 		return nil, err
 	}
 
-	result := collection.FindOne(context.TODO(), filter)
+	result := c.mongoCollection.FindOne(context.TODO(), filter)
 	if result.Err() != nil {
 		if errors.Is(result.Err(), mongo.ErrNoDocuments) {
 			return nil, ErrDocumentNotFound
@@ -109,16 +142,16 @@ func FindOne(collectionName string, filter interface{}) (interface{}, error) {
 	return instance, nil
 }
 
-func First(collectionName string) (interface{}, error) {
-	return FindOne(collectionName, map[string]string{})
+func (c *collection) First() (interface{}, error) {
+	return c.FindOne(map[string]string{})
 }
 
-func UpdateID(collectionName string, id string, object interface{}) error {
+func (c *collection) UpdateID(id string, object interface{}) error {
 	if id == "" {
 		return ErrIDNotExist
 	}
 
-	collection, err := getCollection(collectionName)
+	err := c.init()
 	if err != nil {
 		return err
 	}
@@ -139,7 +172,7 @@ func UpdateID(collectionName string, id string, object interface{}) error {
 		"$set": objectBSON,
 	}
 
-	result, err := collection.UpdateOne(context.TODO(), filter, update)
+	result, err := c.mongoCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return err
 	}
@@ -151,13 +184,13 @@ func UpdateID(collectionName string, id string, object interface{}) error {
 	return nil
 }
 
-func Where(collectionName string, filter interface{}) ([]interface{}, error) {
-	collection, err := getCollection(collectionName)
+func (c *collection) Where(filter interface{}) ([]interface{}, error) {
+	err := c.init()
 	if err != nil {
 		return nil, err
 	}
 
-	cursor, err := collection.Find(context.TODO(), filter)
+	cursor, err := c.mongoCollection.Find(context.TODO(), filter)
 	if err != nil {
 		return nil, err
 	}
@@ -173,11 +206,4 @@ func Where(collectionName string, filter interface{}) ([]interface{}, error) {
 	}
 
 	return all, nil
-}
-
-func getCollection(collectionName string) (*mongo.Collection, error) {
-	if mongoDatabase == nil {
-		return nil, ErrConnectionNotInitialized
-	}
-	return mongoDatabase.Collection(collectionName), nil
 }
