@@ -2,6 +2,7 @@ package gomongo
 
 import (
 	"context"
+	"log"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -171,6 +172,12 @@ var _ = Describe("Init", func() {
 
 		Context("when mongo is stopped", func() {
 			BeforeEach(func() {
+
+				// test := func(req *testcontainers.GenericContainerRequest) {}
+
+				// var test2 testcontainers.CustomizeRequestOption
+				testcontainers.Logger = log.New(GinkgoWriter, "", log.LstdFlags)
+
 				var err error
 				mongodbContainer, err = mongodb.RunContainer(context.Background(), testcontainers.WithImage("mongo:6"))
 				if err != nil {
