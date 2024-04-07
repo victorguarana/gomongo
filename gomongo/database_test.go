@@ -19,24 +19,12 @@ var _ = Describe("NewDatabase", func() {
 
 	Describe("success cases", func() {
 		BeforeEach(func() {
-			testcontainers.Logger = log.New(GinkgoWriter, "", log.LstdFlags)
-
-			var err error
-			mongodbContainer, err = mongodb.RunContainer(context.Background(), testcontainers.WithImage("mongo:6"))
-			if err != nil {
-				panic(err)
-			}
-
-			mongodbContainerURI, err = mongodbContainer.ConnectionString(context.Background())
-			if err != nil {
-				panic(err)
-			}
+			removeTestContainerLogs()
+			mongodbContainer, mongodbContainerURI = runMongoContainer(context.Background())
 		})
 
 		AfterEach(func() {
-			if err := mongodbContainer.Terminate(context.Background()); err != nil {
-				panic(err)
-			}
+			terminateMongoContainer(mongodbContainer, context.Background())
 		})
 
 		Context("when mongo is running", func() {
@@ -72,18 +60,8 @@ var _ = Describe("NewDatabase", func() {
 
 		Context("when mongo is stopped", func() {
 			BeforeEach(func() {
-				testcontainers.Logger = log.New(GinkgoWriter, "", log.LstdFlags)
-
-				var err error
-				mongodbContainer, err = mongodb.RunContainer(context.Background(), testcontainers.WithImage("mongo:6"))
-				if err != nil {
-					panic(err)
-				}
-
-				mongodbContainerURI, err = mongodbContainer.ConnectionString(context.Background())
-				if err != nil {
-					panic(err)
-				}
+				removeTestContainerLogs()
+				mongodbContainer, mongodbContainerURI = runMongoContainer(context.Background())
 
 				if err := mongodbContainer.Stop(context.Background(), nil); err != nil {
 					panic(err)
@@ -91,9 +69,7 @@ var _ = Describe("NewDatabase", func() {
 			})
 
 			AfterEach(func() {
-				if err := mongodbContainer.Terminate(context.Background()); err != nil {
-					panic(err)
-				}
+				terminateMongoContainer(mongodbContainer, context.Background())
 			})
 
 			It("returns error", func() {
@@ -111,3 +87,27 @@ var _ = Describe("NewDatabase", func() {
 		})
 	})
 })
+
+func runMongoContainer(ctx context.Context) (*mongodb.MongoDBContainer, string) {
+	mongodbContainer, err := mongodb.RunContainer(ctx, testcontainers.WithImage("mongo:6"))
+	if err != nil {
+		panic(err)
+	}
+
+	mongodbContainerURI, err := mongodbContainer.ConnectionString(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	return mongodbContainer, mongodbContainerURI
+}
+
+func terminateMongoContainer(mongodbContainer *mongodb.MongoDBContainer, ctx context.Context) {
+	if err := mongodbContainer.Terminate(ctx); err != nil {
+		panic(err)
+	}
+}
+
+func removeTestContainerLogs() {
+	testcontainers.Logger = log.New(GinkgoWriter, "", log.LstdFlags)
+}
