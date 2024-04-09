@@ -37,7 +37,7 @@ var _ = Describe("NewDatabase", func() {
 				receivedDatabase, receivedErr := NewDatabase(cs)
 
 				Expect(receivedErr).NotTo(HaveOccurred())
-				Expect(receivedDatabase.mongoDatabse).NotTo(BeNil())
+				Expect(receivedDatabase.mongoDatabase).NotTo(BeNil())
 			})
 		})
 	})

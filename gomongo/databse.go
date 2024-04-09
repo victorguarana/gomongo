@@ -15,7 +15,7 @@ var (
 )
 
 type Database struct {
-	mongoDatabse *mongo.Database
+	mongoDatabase *mongo.Database
 }
 
 func NewDatabase(cs ConnectionSettings) (*Database, error) {
