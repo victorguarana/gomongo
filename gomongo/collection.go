@@ -50,7 +50,7 @@ type collection[T any] struct {
 }
 
 func NewCollection[T any](database *Database, collectionName string) (Collection[T], error) {
-	if database.mongoDatabase == nil {
+	if database == nil || database.mongoDatabase == nil {
 		return nil, ErrConnectionNotInitialized
 	}
 
