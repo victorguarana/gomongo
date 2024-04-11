@@ -1,4 +1,4 @@
-package gomongo_test
+package gomongo
 
 import (
 	"testing"
@@ -11,3 +11,7 @@ func TestGomongo(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Gomongo Suite")
 }
+
+var _ = BeforeSuite(func() {
+	removeTestContainerLogs()
+})
