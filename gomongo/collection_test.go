@@ -242,13 +242,14 @@ var _ = Describe("collection{}", Ordered, func() {
 
 		Context("when collection is not empty", func() {
 			var (
-				documentCount int
+				dummyStructs []DummyStruct
 			)
 
 			BeforeAll(func() {
 				By("populating with Create")
-				documentCount = randomIntBetween(10, 20)
-				_, err := populateCollectionWithManyFakeDocuments(sut, documentCount)
+				var err error
+				documentCount := randomIntBetween(10, 20)
+				dummyStructs, err = populateCollectionWithManyFakeDocuments(sut, documentCount)
 				if err != nil {
 					Fail(err.Error())
 				}
@@ -273,23 +274,18 @@ var _ = Describe("collection{}", Ordered, func() {
 					receivedCount, receivedErr := sut.Count(context.Background())
 
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedCount).To(Equal(documentCount))
+					Expect(receivedCount).To(Equal(len(dummyStructs)))
 				})
 			})
 
 			Context("when ID is from first document", func() {
 				BeforeAll(func() {
-					By("getting ID with First")
-					first, err := sut.First(context.Background())
-					if err != nil {
-						Fail(err.Error())
-					}
-
+					first := dummyStructs[0]
 					deleteID = first.ID
 				})
 
 				AfterAll(func() {
-					documentCount -= 1
+					dummyStructs = dummyStructs[1:]
 				})
 
 				It("should return no error", func() {
@@ -310,23 +306,18 @@ var _ = Describe("collection{}", Ordered, func() {
 					receivedCount, receivedErr := sut.Count(context.Background())
 
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedCount).To(Equal(documentCount - 1))
+					Expect(receivedCount).To(Equal(len(dummyStructs) - 1))
 				})
 			})
 
 			Context("when ID is from last document", func() {
 				BeforeAll(func() {
-					By("getting ID with Last")
-					first, err := sut.Last(context.Background())
-					if err != nil {
-						Fail(err.Error())
-					}
-
-					deleteID = first.ID
+					last := dummyStructs[len(dummyStructs)-1]
+					deleteID = last.ID
 				})
 
 				AfterAll(func() {
-					documentCount -= 1
+					dummyStructs = dummyStructs[:len(dummyStructs)-1]
 				})
 
 				It("should return no error", func() {
@@ -347,23 +338,20 @@ var _ = Describe("collection{}", Ordered, func() {
 					receivedCount, receivedErr := sut.Count(context.Background())
 
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedCount).To(Equal(documentCount - 1))
+					Expect(receivedCount).To(Equal(len(dummyStructs) - 1))
 				})
 			})
 
 			Context("when ID is in the middle of the collection", func() {
 				BeforeAll(func() {
-					By("getting ID with Last")
-					all, err := sut.All(context.Background())
-					if err != nil {
-						Fail(err.Error())
-					}
-
-					deleteID = all[documentCount/2].ID
+					middleDummy := dummyStructs[len(dummyStructs)/2]
+					deleteID = middleDummy.ID
 				})
 
 				AfterAll(func() {
-					documentCount -= 1
+					dummyStructs = append(
+						dummyStructs[:len(dummyStructs)/2-1],
+						dummyStructs[len(dummyStructs)/2+1:]...)
 				})
 
 				It("should return no error", func() {
@@ -384,7 +372,7 @@ var _ = Describe("collection{}", Ordered, func() {
 					receivedCount, receivedErr := sut.Count(context.Background())
 
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedCount).To(Equal(documentCount - 1))
+					Expect(receivedCount).To(Equal(len(dummyStructs) - 1))
 				})
 			})
 		})
@@ -438,6 +426,160 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			Expect(receivedErr).ToNot(HaveOccurred())
 			Expect(receivedCount).To(Equal(1))
+		})
+	})
+
+	Describe("Drop", Ordered, func() {
+		Context("when collection is empty", func() {
+			It("should return no error", func() {
+				receivedErr := sut.Drop(context.Background())
+
+				Expect(receivedErr).ToNot(HaveOccurred())
+			})
+		})
+
+		Context("when collection in not empty", func() {
+			BeforeAll(func() {
+				documentCount := randomIntBetween(10, 20)
+				_, err := populateCollectionWithManyFakeDocuments(sut, documentCount)
+				if err != nil {
+					Fail(err.Error())
+				}
+			})
+
+			It("should return no error", func() {
+				receivedErr := sut.Drop(context.Background())
+
+				Expect(receivedErr).ToNot(HaveOccurred())
+			})
+
+			It("should have dropped all documents", func() {
+				By("validating with Count")
+				receivedCount, receivedErr := sut.Count(context.Background())
+
+				Expect(receivedErr).ToNot(HaveOccurred())
+				Expect(receivedCount).To(Equal(0))
+			})
+		})
+	})
+
+	Describe("FindID", func() {
+		var (
+			findID ID
+		)
+
+		AfterAll(func() {
+			if err := sut.Drop(context.Background()); err != nil {
+				Fail(err.Error())
+			}
+		})
+
+		Context("when id is nil", func() {
+			It("shold return document not found error", func() {
+				receivedDummy, receivedErr := sut.FindID(context.Background(), nil)
+
+				Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+				Expect(receivedDummy).To(Equal(DummyStruct{}))
+			})
+		})
+
+		Context("when collection is empty", func() {
+			BeforeAll(func() {
+				var err error
+				findID, err = notExistentID()
+				if err != nil {
+					Fail(err.Error())
+				}
+			})
+
+			It("should return document not found error", func() {
+				receivedDummy, receivedErr := sut.FindID(context.Background(), findID)
+
+				Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+				Expect(receivedDummy).To(Equal(DummyStruct{}))
+			})
+		})
+
+		Context("when collection is not empty", func() {
+			var (
+				dummyStructs  []DummyStruct
+				documentCount int
+				receivedDummy DummyStruct
+				receivedErr   error
+				expectedDummy DummyStruct
+			)
+
+			BeforeAll(func() {
+				documentCount = randomIntBetween(10, 20)
+				dummyStructs, err = populateCollectionWithManyFakeDocuments(sut, documentCount)
+				if err != nil {
+					Fail(err.Error())
+				}
+			})
+
+			Context("when ID does not exist", func() {
+				BeforeAll(func() {
+					_, err := notExistentID()
+					if err != nil {
+						Fail(err.Error())
+					}
+				})
+
+				It("should return document not found error", func() {
+					receivedDummy, receivedErr = sut.FindID(context.Background(), nil)
+
+					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedDummy).To(Equal(DummyStruct{}))
+				})
+			})
+
+			Context("when ID is from first document", func() {
+				BeforeAll(func() {
+					By("getting ID with First")
+					expectedDummy = dummyStructs[0]
+					receivedDummy, receivedErr = sut.FindID(context.Background(), expectedDummy.ID)
+				})
+
+				It("should return no error", func() {
+					Expect(receivedErr).ToNot(HaveOccurred())
+				})
+
+				It("should return correct document", func() {
+					Expect(receivedDummy).To(Equal(dummyStructs[0]))
+				})
+			})
+
+			Context("when ID is from last document", func() {
+				BeforeAll(func() {
+					By("getting ID with Last")
+					expectedDummy = dummyStructs[len(dummyStructs)-1]
+					receivedDummy, receivedErr = sut.FindID(context.Background(), expectedDummy.ID)
+				})
+
+				It("should return no error", func() {
+					Expect(receivedErr).ToNot(HaveOccurred())
+				})
+
+				It("should return correct document", func() {
+					Expect(receivedDummy).To(Equal(expectedDummy))
+				})
+			})
+
+			Context("when ID is from the middle of the collection", func() {
+				BeforeAll(func() {
+					By("getting ID with Last")
+					expectedDummy = dummyStructs[len(dummyStructs)/2]
+					receivedDummy, receivedErr = sut.FindID(context.Background(), expectedDummy.ID)
+				})
+
+				It("should return no error", func() {
+					Expect(receivedErr).ToNot(HaveOccurred())
+				})
+
+				It("should return correct document", func() {
+					Expect(receivedDummy).To(Equal(expectedDummy))
+				})
+			})
 		})
 	})
 })
