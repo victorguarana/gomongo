@@ -475,7 +475,7 @@ var _ = Describe("collection{}", Ordered, func() {
 		})
 
 		Context("when id is nil", func() {
-			It("shold return document not found error", func() {
+			It("should return document not found error", func() {
 				receivedDummy, receivedErr := sut.FindID(context.Background(), nil)
 
 				Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
@@ -578,6 +578,108 @@ var _ = Describe("collection{}", Ordered, func() {
 
 				It("should return correct document", func() {
 					Expect(receivedDummy).To(Equal(expectedDummy))
+				})
+			})
+		})
+	})
+
+	Describe("FindOne", func() {
+		var (
+			filter any
+		)
+
+		AfterAll(func() {
+			if err := sut.Drop(context.Background()); err != nil {
+				Fail(err.Error())
+			}
+		})
+
+		Context("when collection is empty", func() {
+			It("should return document not found error", func() {
+				receivedDummmy, receivedErr := sut.FindOne(context.Background(), nil)
+
+				Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+				Expect(receivedDummmy).To(Equal(DummyStruct{}))
+			})
+		})
+
+		Context("when collection is not empty", func() {
+			var (
+				dummyStructs   []DummyStruct
+				documentCount  int
+				receivedDummmy DummyStruct
+				receivedErr    error
+				expectedDummy  DummyStruct
+			)
+
+			BeforeAll(func() {
+				documentCount = randomIntBetween(10, 20)
+				dummyStructs, err = populateCollectionWithManyFakeDocuments(sut, documentCount)
+				if err != nil {
+					Fail(err.Error())
+				}
+			})
+
+			Context("when filter is nil", func() {
+				It("should return document not found error", func() {
+					receivedDummmy, receivedErr = sut.FindOne(context.Background(), nil)
+
+					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedDummmy).To(Equal(DummyStruct{}))
+				})
+			})
+
+			Context("when filter does not match any document", func() {
+				BeforeEach(func() {
+					filter = map[string]any{"int": 0}
+				})
+
+				It("should return document not found error", func() {
+					receivedDummmy, receivedErr = sut.FindOne(context.Background(), filter)
+
+					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedDummmy).To(Equal(DummyStruct{}))
+				})
+			})
+
+			Context("when filter matches a document", func() {
+				BeforeEach(func() {
+					expectedDummy = dummyStructs[documentCount/2]
+					filter = map[string]any{"int64": expectedDummy.Int64}
+				})
+
+				It("should return no error and correct document", func() {
+					receivedDummmy, receivedErr = sut.FindOne(context.Background(), filter)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedDummmy).To(Equal(expectedDummy))
+				})
+			})
+
+			Context("when filter is empty", func() {
+				BeforeEach(func() {
+					expectedDummy = dummyStructs[0]
+					filter = map[string]any{}
+				})
+
+				It("should return first document and no error", func() {
+					receivedDummmy, receivedErr = sut.FindOne(context.Background(), filter)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedDummmy).To(Equal(expectedDummy))
+				})
+			})
+
+			Context("when filter does have not existent fields", func() {
+				BeforeEach(func() {
+					filter = map[string]any{"not_existent": 0}
+				})
+
+				It("should return document not found error", func() {
+					receivedDummmy, receivedErr = sut.FindOne(context.Background(), filter)
+
+					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedDummmy).To(Equal(DummyStruct{}))
 				})
 			})
 		})

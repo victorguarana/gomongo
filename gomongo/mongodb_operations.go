@@ -48,7 +48,7 @@ func findOne[T any](ctx context.Context, mongoCollection *mongo.Collection, filt
 
 func singleResultError(result *mongo.SingleResult) error {
 	if err := result.Err(); err != nil {
-		if errors.Is(result.Err(), mongo.ErrNoDocuments) {
+		if errors.Is(result.Err(), mongo.ErrNoDocuments) || errors.Is(result.Err(), mongo.ErrNilDocument) {
 			return ErrDocumentNotFound
 		}
 		return err
