@@ -1442,6 +1442,245 @@ var _ = Describe("collection{}", Ordered, func() {
 			})
 		})
 	})
+
+	Describe("WhereWithOrder", func() {
+		var (
+			filter  map[string]any
+			orderBy map[string]OrderBy
+		)
+
+		AfterAll(func() {
+			if err := sut.Drop(context.Background()); err != nil {
+				Fail(err.Error())
+			}
+		})
+
+		Context("when collection is empty", func() {
+			PContext("when filter is nil and order is nil", func() {
+				It("should return empty slice and no error", func() {
+					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), nil, nil)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedStructs).To(BeEmpty())
+				})
+			})
+
+			PContext("when filter is nil and order is not nil", func() {
+				BeforeEach(func() {
+					orderBy = map[string]OrderBy{"string": OrderAsc}
+				})
+
+				It("should return empty slice and no error", func() {
+					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), nil, orderBy)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedStructs).To(BeEmpty())
+				})
+			})
+
+			Context("when filter is not nil and order is nil", func() {
+				BeforeEach(func() {
+					filter = map[string]any{"string": ""}
+				})
+
+				It("should return empty slice and no error", func() {
+					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, nil)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedStructs).To(BeEmpty())
+				})
+			})
+
+			Context("when filter is not nil and order is not nil", func() {
+				BeforeEach(func() {
+					filter = map[string]any{"string": ""}
+					orderBy = map[string]OrderBy{"string": OrderAsc}
+				})
+
+				It("should return empty slice and no error", func() {
+					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedStructs).To(BeEmpty())
+				})
+			})
+		})
+
+		Context("when collection is not empty", func() {
+			var (
+				expectedDummies []DummyStruct
+				dummyStructs    []DummyStruct
+				documentCount   int
+			)
+
+			BeforeAll(func() {
+				By("populating with Create")
+				documentCount = randomIntBetween(10, 20)
+				dummyStructs, err = populateCollectionWithManyFakeDocuments(sut, documentCount)
+				if err != nil {
+					Fail(err.Error())
+				}
+			})
+
+			PContext("when filter is nil and order is nil", func() {
+				It("should return empty slice and no error", func() {
+					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), nil, nil)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedStructs).To(BeEmpty())
+				})
+			})
+
+			PContext("when filter is nil and order is not nil", func() {
+				BeforeEach(func() {
+					orderBy = map[string]OrderBy{"string": OrderAsc}
+				})
+
+				It("should return empty slice and no error", func() {
+					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), nil, orderBy)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedStructs).To(BeEmpty())
+				})
+			})
+
+			Context("when filter is not nil and order is nil", func() {
+				BeforeEach(func() {
+					filter = map[string]any{}
+
+					expectedDummies = dummyStructs
+				})
+
+				It("should return empty slice and no error", func() {
+					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, nil)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedStructs).To(Equal(expectedDummies))
+				})
+			})
+
+			Context("when filter is not nil and order is not nil", func() {
+				BeforeEach(func() {
+					filter = map[string]any{"string": ""}
+					orderBy = map[string]OrderBy{"string": OrderAsc}
+				})
+
+				It("should return empty slice and no error", func() {
+					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedStructs).To(BeEmpty())
+				})
+			})
+
+			Context("when filter does not have existing fields", func() {
+				BeforeEach(func() {
+					filter = map[string]any{"not_existent": 0}
+					orderBy = map[string]OrderBy{"string": OrderAsc}
+				})
+
+				It("should return empty slice and no error", func() {
+					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedStructs).To(BeEmpty())
+				})
+			})
+
+			Context("when order does not have existing fields", func() {
+				BeforeEach(func() {
+					filter = map[string]any{}
+					orderBy = map[string]OrderBy{"not_existent": OrderAsc}
+
+					expectedDummies = dummyStructs
+				})
+
+				It("should return empty slice and no error", func() {
+					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedStructs).To(Equal(expectedDummies))
+				})
+			})
+
+			Context("when filter have wrong value type", func() {
+				BeforeEach(func() {
+					filter = map[string]any{"string": -1}
+					orderBy = map[string]OrderBy{"string": OrderAsc}
+				})
+
+				It("should return empty slice and no error", func() {
+					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedStructs).To(BeEmpty())
+				})
+			})
+
+			Context("when filter does not match any document", func() {
+				BeforeEach(func() {
+					filter = map[string]any{"string": ""}
+					orderBy = map[string]OrderBy{"string": OrderAsc}
+				})
+
+				It("should return empty slice and no error", func() {
+					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedStructs).To(BeEmpty())
+				})
+			})
+
+			Context("when filter matches one document", func() {
+				BeforeEach(func() {
+					expectedDummy := dummyStructs[documentCount/2]
+					expectedDummies = []DummyStruct{expectedDummy}
+
+					filter = map[string]any{"string": expectedDummy.String}
+					orderBy = map[string]OrderBy{"string": OrderAsc}
+				})
+
+				It("should return correct documents and no error", func() {
+					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedStructs).To(Equal(expectedDummies))
+				})
+			})
+
+			Context("when filter matches multiple documents", func() {
+				BeforeEach(func() {
+					By("ensuring with UpdateID that there are multiple documents with the same field")
+					firstExpectedDummy := dummyStructs[documentCount/2]
+					secondExpectedDummy := dummyStructs[documentCount/2+1]
+
+					secondExpectedDummy.String = firstExpectedDummy.String
+					err := sut.UpdateID(context.Background(), secondExpectedDummy.ID, secondExpectedDummy)
+					if err != nil {
+						Fail(err.Error())
+					}
+
+					expectedDummies = []DummyStruct{firstExpectedDummy, secondExpectedDummy}
+
+					filter = map[string]any{"string": firstExpectedDummy.String}
+					orderBy = map[string]OrderBy{"int": OrderAsc}
+				})
+
+				It("should return all matching ordered documents and no error", func() {
+					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+
+					Expect(receivedErr).ToNot(HaveOccurred())
+					Expect(receivedStructs).To(ContainElements(expectedDummies))
+
+					lastInt := receivedStructs[0].Int
+					for _, receivedDummy := range receivedStructs {
+						Expect(receivedDummy.Int).To(BeNumerically(">=", lastInt))
+						lastInt = receivedDummy.Int
+					}
+				})
+			})
+		})
+	})
 })
 
 func initializeCollection(mongoURI, databaseName, collectionName string) (collection[DummyStruct], error) {
