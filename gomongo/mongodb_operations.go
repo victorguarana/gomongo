@@ -131,7 +131,14 @@ func deleteResultError(result *mongo.DeleteResult) error {
 }
 
 func updateID[T any](ctx context.Context, mongoCollection *mongo.Collection, filter any, doc T) error {
-	update := bson.M{"$set": doc}
+	docBSON, err := dataToBSON(doc)
+	if err != nil {
+		return err
+	}
+
+	delete(docBSON, "_id")
+
+	update := bson.M{"$set": docBSON}
 	result, err := mongoCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
