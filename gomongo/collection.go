@@ -107,6 +107,7 @@ func (c *collection[T]) FindID(ctx context.Context, id ID) (T, error) {
 
 // FindOne returns an object of a collection by filter
 func (c *collection[T]) FindOne(ctx context.Context, filter any) (T, error) {
+	filter = validateFilter(filter)
 	emptyOrder := map[string]OrderBy{}
 	return findOne[T](ctx, c.mongoCollection, filter, emptyOrder)
 }
@@ -120,6 +121,7 @@ func (c *collection[T]) First(ctx context.Context) (T, error) {
 
 // FirstInserted returns the first object of a collection ordered by id
 func (c *collection[T]) FirstInserted(ctx context.Context, filter any) (T, error) {
+	filter = validateFilter(filter)
 	order := map[string]OrderBy{"_id": OrderAsc}
 	return findOne[T](ctx, c.mongoCollection, filter, order)
 }
@@ -133,6 +135,7 @@ func (c *collection[T]) Last(ctx context.Context) (T, error) {
 
 // LastInserted returns the last object of a collection ordered by id
 func (c *collection[T]) LastInserted(ctx context.Context, filter any) (T, error) {
+	filter = validateFilter(filter)
 	order := map[string]OrderBy{"_id": OrderDesc}
 	return findOne[T](ctx, c.mongoCollection, filter, order)
 }
@@ -149,12 +152,14 @@ func (c *collection[T]) UpdateID(ctx context.Context, id ID, instance T) error {
 
 // Where returns all objects of a collection by filter
 func (c *collection[T]) Where(ctx context.Context, filter any) ([]T, error) {
+	filter = validateFilter(filter)
 	emptyOrder := map[string]OrderBy{}
 	return where[T](ctx, c.mongoCollection, filter, emptyOrder)
 }
 
 // WhereWithOrder returns all objects of a collection by filter and order
 func (c *collection[T]) WhereWithOrder(ctx context.Context, filter any, order map[string]OrderBy) ([]T, error) {
+	filter = validateFilter(filter)
 	return where[T](ctx, c.mongoCollection, filter, order)
 }
 
@@ -205,4 +210,12 @@ func validateIndex(index Index) error {
 	}
 
 	return nil
+}
+
+func validateFilter(filter any) any {
+	if filter == nil {
+		return bson.M{}
+	}
+
+	return filter
 }
