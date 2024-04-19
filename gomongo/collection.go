@@ -15,6 +15,9 @@ var (
 	ErrConnectionNotInitialized = errors.New("connection was not initialized")
 	ErrDocumentNotFound         = errors.New("document not found")
 	ErrDuplicateKey             = errors.New("duplicate key")
+	ErrInvalidIndex             = errors.New("invalid index")
+	ErrInvalidCommandOptions    = errors.New("invalid command options")
+	ErrIndexNotFound            = errors.New("index not found")
 )
 
 type ID *primitive.ObjectID
@@ -25,6 +28,11 @@ const (
 	OrderAsc  OrderBy = 1
 	OrderDesc OrderBy = -1
 )
+
+type Index struct {
+	Keys map[string]OrderBy `bson:"key"`
+	Name string
+}
 
 type Collection[T any] interface {
 	All(ctx context.Context) ([]T, error)
@@ -41,8 +49,11 @@ type Collection[T any] interface {
 	Where(ctx context.Context, filter any) ([]T, error)
 	WhereWithOrder(ctx context.Context, filter any, orderBy map[string]OrderBy) ([]T, error)
 
+	CreateUniqueIndex(ctx context.Context, index Index) error
+	DeleteIndex(ctx context.Context, indexName string) error
+	ListIndexes(ctx context.Context) ([]Index, error)
+
 	Drop(ctx context.Context) error
-	CreateUniqueIndex(ctx context.Context, fields ...string) error
 }
 
 type collection[T any] struct {
@@ -147,13 +158,22 @@ func (c *collection[T]) WhereWithOrder(ctx context.Context, filter any, order ma
 	return where[T](ctx, c.mongoCollection, filter, order)
 }
 
-// CreateUniqueIndex creates a unique index for a collection by fields
-func (c *collection[T]) CreateUniqueIndex(ctx context.Context, fields ...string) error {
-	if err := validateVariadicFields(fields...); err != nil {
-		return fmt.Errorf("cannot create empty index")
+func (c *collection[T]) CreateUniqueIndex(ctx context.Context, index Index) error {
+	if err := validateIndex(index); err != nil {
+		return errors.Join(ErrInvalidIndex, err)
 	}
 
-	return createUniqueIndex(ctx, c.mongoCollection, fields...)
+	return createUniqueIndex(ctx, c.mongoCollection, index.Name, index.Keys)
+}
+
+// ListIndexes returns all indexes of a collection
+func (c *collection[T]) ListIndexes(ctx context.Context) ([]Index, error) {
+	return listIndexes(ctx, c.mongoCollection)
+}
+
+// DeleteIndex deletes an index of a collection
+func (c *collection[T]) DeleteIndex(ctx context.Context, indexName string) error {
+	return deleteIndex(ctx, c.mongoCollection, indexName)
 }
 
 // Drop deletes a collection
@@ -169,12 +189,20 @@ func validateID(id ID) error {
 	return nil
 }
 
-func validateVariadicFields(fields ...string) error {
-	for _, field := range fields {
-		if field != "" {
-			return nil
+func validateIndex(index Index) error {
+	if len(index.Keys) == 0 {
+		return fmt.Errorf("index keys can not be empty")
+	}
+
+	for key, orderBy := range index.Keys {
+		if key == "" {
+			return fmt.Errorf("index key can not be empty")
+		}
+
+		if orderBy != OrderAsc && orderBy != OrderDesc {
+			return fmt.Errorf("index order must be OrderAsc or OrderDesc")
 		}
 	}
 
-	return fmt.Errorf("invalid fields")
+	return nil
 }

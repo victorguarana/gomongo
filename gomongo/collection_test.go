@@ -1681,6 +1681,271 @@ var _ = Describe("collection{}", Ordered, func() {
 			})
 		})
 	})
+
+	Describe("ListIndexes", func() {
+		AfterAll(func() {
+			if err := sut.Drop(context.Background()); err != nil {
+				Fail(err.Error())
+			}
+		})
+
+		Context("when collection has no custom index", func() {
+			It("should return no indexes", func() {
+				receivedIndexes, receivedErr := sut.ListIndexes(context.Background())
+
+				Expect(receivedErr).ToNot(HaveOccurred())
+				Expect(receivedIndexes).To(HaveLen(0))
+			})
+		})
+
+		Context("when collection has one custom index", func() {
+			var (
+				defaultIndex    = Index{Name: "_id_", Keys: map[string]OrderBy{"_id": OrderAsc}}
+				customIndex     = Index{Name: "custom_index", Keys: map[string]OrderBy{"string": OrderAsc}}
+				expectedIndexes = []Index{defaultIndex, customIndex}
+			)
+
+			BeforeAll(func() {
+				if err := sut.CreateUniqueIndex(context.Background(), customIndex); err != nil {
+					Fail(err.Error())
+				}
+			})
+
+			It("should return default index and custom index", func() {
+				receivedIndexes, receivedErr := sut.ListIndexes(context.Background())
+
+				Expect(receivedErr).ToNot(HaveOccurred())
+				Expect(receivedIndexes).To(Equal(expectedIndexes))
+			})
+		})
+	})
+
+	Describe("CreateUniqueIndex", func() {
+		var (
+			index       Index
+			receivedErr error
+		)
+
+		AfterAll(func() {
+			if err := sut.Drop(context.Background()); err != nil {
+				Fail(err.Error())
+			}
+		})
+
+		Context("when keys is nil", func() {
+			BeforeAll(func() {
+				index = Index{Name: "", Keys: nil}
+
+				receivedErr = sut.CreateUniqueIndex(context.Background(), index)
+			})
+
+			It("should return error", func() {
+				Expect(receivedErr).To(MatchError(ErrInvalidIndex))
+			})
+
+			It("should not create index", func() {
+				By("validating with ListIndexes")
+				receivedIndexes, err := sut.ListIndexes(context.Background())
+				if err != nil {
+					Fail(err.Error())
+				}
+
+				Expect(receivedIndexes).To(HaveLen(0))
+			})
+		})
+
+		Context("when keys is empty", func() {
+			BeforeAll(func() {
+				index = Index{Name: "", Keys: map[string]OrderBy{}}
+
+				receivedErr = sut.CreateUniqueIndex(context.Background(), index)
+			})
+
+			It("should return error", func() {
+				Expect(receivedErr).To(MatchError(ErrInvalidIndex))
+			})
+
+			It("should not create index", func() {
+				By("validating with ListIndexes")
+				receivedIndexes, err := sut.ListIndexes(context.Background())
+				if err != nil {
+					Fail(err.Error())
+				}
+
+				Expect(receivedIndexes).To(HaveLen(0))
+			})
+		})
+
+		Context("when one key is empty", func() {
+			BeforeAll(func() {
+				index = Index{Name: "", Keys: map[string]OrderBy{"": OrderAsc}}
+
+				receivedErr = sut.CreateUniqueIndex(context.Background(), index)
+			})
+
+			It("should return error", func() {
+				Expect(receivedErr).To(MatchError(ErrInvalidIndex))
+			})
+
+			It("should not create index", func() {
+				By("validating with ListIndexes")
+				receivedIndexes, err := sut.ListIndexes(context.Background())
+				if err != nil {
+					Fail(err.Error())
+				}
+
+				Expect(receivedIndexes).To(HaveLen(0))
+			})
+		})
+
+		Context("when key order is wrong", func() {
+			BeforeAll(func() {
+				index = Index{Name: "", Keys: map[string]OrderBy{"string": 0}}
+
+				receivedErr = sut.CreateUniqueIndex(context.Background(), index)
+			})
+
+			It("should return error", func() {
+				Expect(receivedErr).To(MatchError(ErrInvalidIndex))
+			})
+
+			It("should not create index", func() {
+				By("validating with ListIndexes")
+				receivedIndexes, err := sut.ListIndexes(context.Background())
+				if err != nil {
+					Fail(err.Error())
+				}
+
+				Expect(receivedIndexes).To(HaveLen(0))
+			})
+		})
+
+		Context("when name is empty", func() {
+			BeforeAll(func() {
+				index = Index{Name: "", Keys: map[string]OrderBy{"string": OrderAsc}}
+				receivedErr = sut.CreateUniqueIndex(context.Background(), index)
+			})
+
+			AfterAll(func() {
+				if err := sut.Drop(context.Background()); err != nil {
+					Fail(err.Error())
+				}
+			})
+
+			It("should return no error", func() {
+				Expect(receivedErr).ToNot(HaveOccurred())
+			})
+
+			It("should create index with default name", func() {
+				By("validating with ListIndexes")
+				receivedIndexes, err := sut.ListIndexes(context.Background())
+				if err != nil {
+					Fail(err.Error())
+				}
+
+				Expect(receivedIndexes).To(ContainElement(Index{Name: "string_1", Keys: index.Keys}))
+			})
+		})
+
+		Context("when name is not empty", func() {
+			BeforeAll(func() {
+				index = Index{Name: "unique_string", Keys: map[string]OrderBy{"string": OrderAsc}}
+
+				receivedErr = sut.CreateUniqueIndex(context.Background(), index)
+			})
+
+			AfterAll(func() {
+				if err := sut.Drop(context.Background()); err != nil {
+					Fail(err.Error())
+				}
+			})
+
+			It("should return no error", func() {
+				Expect(receivedErr).ToNot(HaveOccurred())
+			})
+
+			It("should create index wirh custom name", func() {
+				By("validating with ListIndexes")
+				receivedIndexes, err := sut.ListIndexes(context.Background())
+				if err != nil {
+					Fail(err.Error())
+				}
+
+				Expect(receivedIndexes).To(ContainElement(index))
+			})
+		})
+	})
+
+	Describe("DeleteIndex", func() {
+		var (
+			receivedErr error
+
+			defaultIndex = Index{Name: "_id_", Keys: map[string]OrderBy{"_id": OrderAsc}}
+			customIndex  = Index{Name: "custom_index", Keys: map[string]OrderBy{"string": OrderAsc}}
+		)
+
+		BeforeAll(func() {
+			if err := sut.CreateUniqueIndex(context.Background(), customIndex); err != nil {
+				Fail(err.Error())
+			}
+		})
+
+		AfterAll(func() {
+			if err := sut.Drop(context.Background()); err != nil {
+				Fail(err.Error())
+			}
+		})
+
+		Context("when index does not exist", func() {
+			BeforeAll(func() {
+				receivedErr = sut.DeleteIndex(context.Background(), "not_existent")
+			})
+
+			It("should return error", func() {
+				Expect(receivedErr).To(MatchError(ErrIndexNotFound))
+			})
+		})
+
+		Context("when index is default", func() {
+			BeforeAll(func() {
+				receivedErr = sut.DeleteIndex(context.Background(), defaultIndex.Name)
+			})
+
+			It("should return error", func() {
+				Expect(receivedErr).To(MatchError(ErrInvalidCommandOptions))
+			})
+
+			It("should not delete index", func() {
+				By("validating with ListIndexes")
+				receivedIndexes, err := sut.ListIndexes(context.Background())
+				if err != nil {
+					Fail(err.Error())
+				}
+
+				Expect(receivedIndexes).To(ContainElement(defaultIndex))
+			})
+		})
+
+		Context("when index is custom", func() {
+			BeforeAll(func() {
+				receivedErr = sut.DeleteIndex(context.Background(), customIndex.Name)
+			})
+
+			It("should return no error", func() {
+				Expect(receivedErr).ToNot(HaveOccurred())
+			})
+
+			It("should delete index", func() {
+				By("validating with ListIndexes")
+				receivedIndexes, err := sut.ListIndexes(context.Background())
+				if err != nil {
+					Fail(err.Error())
+				}
+
+				Expect(receivedIndexes).ToNot(ContainElement(customIndex))
+			})
+		})
+	})
 })
 
 func initializeCollection(mongoURI, databaseName, collectionName string) (collection[DummyStruct], error) {

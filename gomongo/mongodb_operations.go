@@ -168,10 +168,14 @@ func count(ctx context.Context, mongoCollection *mongo.Collection, filter any) (
 	return int(count), nil
 }
 
-func createUniqueIndex(ctx context.Context, mongoCollection *mongo.Collection, fields ...string) error {
+func createUniqueIndex(ctx context.Context, mongoCollection *mongo.Collection, name string, keys map[string]OrderBy) error {
 	indexModel := mongo.IndexModel{
-		Keys:    variadicToKeysBSON(fields...),
+		Keys:    keys,
 		Options: options.Index().SetUnique(true),
+	}
+
+	if name != "" {
+		indexModel.Options.SetName(name)
 	}
 
 	_, err := mongoCollection.Indexes().CreateOne(ctx, indexModel)
@@ -182,17 +186,54 @@ func createUniqueIndex(ctx context.Context, mongoCollection *mongo.Collection, f
 	return nil
 }
 
-func variadicToKeysBSON(fields ...string) bson.D {
-	keys := bson.D{}
-	for _, field := range fields {
-		if field == "" {
-			continue
-		}
-
-		keys = append(keys, bson.E{Key: field, Value: -1})
+func listIndexes(ctx context.Context, mongoCollection *mongo.Collection) ([]Index, error) {
+	cursor, err := mongoCollection.Indexes().List(ctx)
+	if err != nil {
+		// mongo.CommandError
+		return nil, err
 	}
 
-	return keys
+	return mongoCursorToSliceIndex(ctx, cursor)
+}
+
+func mongoCursorToSliceIndex(ctx context.Context, cursor *mongo.Cursor) ([]Index, error) {
+	var indexes []Index
+
+	for cursor.Next(ctx) {
+		var index Index
+		err := cursor.Decode(&index)
+		if err != nil {
+			return nil, err
+		}
+
+		indexes = append(indexes, index)
+	}
+
+	return indexes, nil
+}
+
+func deleteIndex(ctx context.Context, mongoCollection *mongo.Collection, indexName string) error {
+	_, err := mongoCollection.Indexes().DropOne(ctx, indexName)
+	if err != nil {
+		var mongoCommandError mongo.CommandError
+		if ok := errors.As(err, &mongoCommandError); ok {
+			return mongoCommandErrorToCustomError(mongoCommandError)
+		}
+		return err
+	}
+
+	return nil
+}
+
+func mongoCommandErrorToCustomError(mongoCommandError mongo.CommandError) error {
+	switch mongoCommandError.Code {
+	case 72:
+		return fmt.Errorf("%w: %s", ErrInvalidCommandOptions, fmt.Errorf(mongoCommandError.Message))
+	case 27:
+		return fmt.Errorf("%w: %s", ErrIndexNotFound, fmt.Errorf(mongoCommandError.Message))
+	}
+
+	return fmt.Errorf("mongo command error: %s: %s", mongoCommandError.Name, mongoCommandError.Message)
 }
 
 func drop(ctx context.Context, mongoCollection *mongo.Collection) error {
