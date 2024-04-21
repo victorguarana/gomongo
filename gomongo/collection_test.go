@@ -129,9 +129,9 @@ var _ = Describe("collection{}", Ordered, func() {
 	Describe("All", Ordered, func() {
 		Context("when collection is empty", func() {
 			It("should return empty slice and no error", func() {
-				receivedStructs, receivedErr := sut.All(context.Background())
+				receivedDummies, receivedErr := sut.All(context.Background())
 				Expect(receivedErr).ToNot(HaveOccurred())
-				Expect(receivedStructs).To(BeEmpty())
+				Expect(receivedDummies).To(BeEmpty())
 			})
 		})
 
@@ -140,8 +140,8 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
-				documentCount := randomIntBetween(10, 20)
-				dummies, err = populateCollectionWithManyFakeDocuments(sut, documentCount)
+				dummiesCount := randomIntBetween(10, 20)
+				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
 					Fail(err.Error())
 				}
@@ -153,10 +153,10 @@ var _ = Describe("collection{}", Ordered, func() {
 				}
 			})
 
-			It("should return all structs and no error", func() {
-				receivedStructs, receivedErr := sut.All(context.Background())
+			It("should return all documents and no error", func() {
+				receivedDummies, receivedErr := sut.All(context.Background())
 				Expect(receivedErr).ToNot(HaveOccurred())
-				Expect(receivedStructs).To(Equal(dummies))
+				Expect(receivedDummies).To(Equal(dummies))
 			})
 		})
 	})
@@ -229,8 +229,8 @@ var _ = Describe("collection{}", Ordered, func() {
 			BeforeAll(func() {
 				By("populating with Create")
 				var err error
-				documentCount := randomIntBetween(10, 20)
-				dummies, err = populateCollectionWithManyFakeDocuments(sut, documentCount)
+				dummiesCount := randomIntBetween(10, 20)
+				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
 					Fail(err.Error())
 				}
@@ -255,9 +255,9 @@ var _ = Describe("collection{}", Ordered, func() {
 					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
 
 					By("validating with All")
-					receivedStructs, receivedErr := sut.All(context.Background())
+					receivedDummies, receivedErr := sut.All(context.Background())
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(Equal(dummies))
+					Expect(receivedDummies).To(Equal(dummies))
 				})
 			})
 
@@ -273,9 +273,9 @@ var _ = Describe("collection{}", Ordered, func() {
 					Expect(receivedErr).NotTo(HaveOccurred())
 
 					By("validating with All")
-					receivedStructs, receivedErr := sut.All(context.Background())
+					receivedDummies, receivedErr := sut.All(context.Background())
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(Equal(dummies))
+					Expect(receivedDummies).To(Equal(dummies))
 				})
 			})
 
@@ -291,9 +291,9 @@ var _ = Describe("collection{}", Ordered, func() {
 					Expect(receivedErr).NotTo(HaveOccurred())
 
 					By("validating with All")
-					receivedStructs, receivedErr := sut.All(context.Background())
+					receivedDummies, receivedErr := sut.All(context.Background())
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(Equal(dummies))
+					Expect(receivedDummies).To(Equal(dummies))
 				})
 			})
 
@@ -311,9 +311,9 @@ var _ = Describe("collection{}", Ordered, func() {
 					Expect(receivedErr).NotTo(HaveOccurred())
 
 					By("validating with All")
-					receivedStructs, receivedErr := sut.All(context.Background())
+					receivedDummies, receivedErr := sut.All(context.Background())
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(Equal(dummies))
+					Expect(receivedDummies).To(Equal(dummies))
 				})
 			})
 		})
@@ -353,9 +353,9 @@ var _ = Describe("collection{}", Ordered, func() {
 			Expect(dummy.ID).ToNot(Equal(initialID))
 
 			By("validating with All")
-			receivedStructs, receivedErr := sut.All(context.Background())
+			receivedDummies, receivedErr := sut.All(context.Background())
 			Expect(receivedErr).ToNot(HaveOccurred())
-			Expect(receivedStructs).To(Equal([]DummyStruct{dummy}))
+			Expect(receivedDummies).To(Equal([]DummyStruct{dummy}))
 		})
 	})
 
@@ -370,8 +370,8 @@ var _ = Describe("collection{}", Ordered, func() {
 		Context("when collection in filled", func() {
 			BeforeAll(func() {
 				By("populating with Create")
-				documentCount := randomIntBetween(10, 20)
-				_, err := populateCollectionWithManyFakeDocuments(sut, documentCount)
+				dummiesCount := randomIntBetween(10, 20)
+				_, err := populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
 					Fail(err.Error())
 				}
@@ -424,8 +424,8 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
-				documentCount := randomIntBetween(10, 20)
-				dummies, err = populateCollectionWithManyFakeDocuments(sut, documentCount)
+				dummiesCount := randomIntBetween(10, 20)
+				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
 					Fail(err.Error())
 				}
@@ -512,8 +512,8 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
-				documentCount := randomIntBetween(10, 20)
-				dummies, err = populateCollectionWithManyFakeDocuments(sut, documentCount)
+				dummiesCount := randomIntBetween(10, 20)
+				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
 					Fail(err.Error())
 				}
@@ -615,8 +615,8 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
-				documentCount := randomIntBetween(10, 20)
-				dummies, err := populateCollectionWithManyFakeDocuments(sut, documentCount)
+				dummiesCount := randomIntBetween(10, 20)
+				dummies, err := populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
 					Fail(err.Error())
 				}
@@ -677,8 +677,8 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
-				documentCount := randomIntBetween(10, 20)
-				dummies, err = populateCollectionWithManyFakeDocuments(sut, documentCount)
+				dummiesCount := randomIntBetween(10, 20)
+				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
 					Fail(err.Error())
 				}
@@ -802,8 +802,8 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
-				documentCount := randomIntBetween(10, 20)
-				dummies, err := populateCollectionWithManyFakeDocuments(sut, documentCount)
+				dummiesCount := randomIntBetween(10, 20)
+				dummies, err := populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
 					Fail(err.Error())
 				}
@@ -858,8 +858,8 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
-				documentCount := randomIntBetween(10, 20)
-				dummies, err = populateCollectionWithManyFakeDocuments(sut, documentCount)
+				dummiesCount := randomIntBetween(10, 20)
+				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
 					Fail(err.Error())
 				}
@@ -998,8 +998,8 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
-				documentCount := randomIntBetween(10, 20)
-				dummies, err = populateCollectionWithManyFakeDocuments(sut, documentCount)
+				dummiesCount := randomIntBetween(10, 20)
+				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
 					Fail(err.Error())
 				}
@@ -1101,9 +1101,9 @@ var _ = Describe("collection{}", Ordered, func() {
 		Context("when collection is empty", func() {
 			Context("when filter is nil", func() {
 				It("should return empty slice and no error", func() {
-					receivedStructs, receivedErr := sut.Where(context.Background(), nil)
+					receivedDummies, receivedErr := sut.Where(context.Background(), nil)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(BeEmpty())
+					Expect(receivedDummies).To(BeEmpty())
 				})
 			})
 
@@ -1113,9 +1113,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return empty slice and no error", func() {
-					receivedStructs, receivedErr := sut.Where(context.Background(), filter)
+					receivedDummies, receivedErr := sut.Where(context.Background(), filter)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(BeEmpty())
+					Expect(receivedDummies).To(BeEmpty())
 				})
 			})
 
@@ -1125,9 +1125,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return empty slice and no error", func() {
-					receivedStructs, receivedErr := sut.Where(context.Background(), filter)
+					receivedDummies, receivedErr := sut.Where(context.Background(), filter)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(BeEmpty())
+					Expect(receivedDummies).To(BeEmpty())
 				})
 			})
 		})
@@ -1136,13 +1136,13 @@ var _ = Describe("collection{}", Ordered, func() {
 			var (
 				expectedDummies []DummyStruct
 				dummies         []DummyStruct
-				documentCount   int
+				dummiesCount    int
 			)
 
 			BeforeAll(func() {
 				By("populating with Create")
-				documentCount = randomIntBetween(10, 20)
-				dummies, err = populateCollectionWithManyFakeDocuments(sut, documentCount)
+				dummiesCount = randomIntBetween(10, 20)
+				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
 					Fail(err.Error())
 				}
@@ -1154,9 +1154,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return all documents and no error", func() {
-					receivedStructs, receivedErr := sut.Where(context.Background(), nil)
+					receivedDummies, receivedErr := sut.Where(context.Background(), nil)
 					Expect(receivedErr).NotTo(HaveOccurred())
-					Expect(receivedStructs).To(Equal(expectedDummies))
+					Expect(receivedDummies).To(Equal(expectedDummies))
 				})
 			})
 
@@ -1166,9 +1166,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return all documents and no error", func() {
-					receivedStructs, receivedErr := sut.Where(context.Background(), filter)
+					receivedDummies, receivedErr := sut.Where(context.Background(), filter)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(Equal(dummies))
+					Expect(receivedDummies).To(Equal(dummies))
 				})
 			})
 
@@ -1178,9 +1178,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return empty slice and no error", func() {
-					receivedStructs, receivedErr := sut.Where(context.Background(), filter)
+					receivedDummies, receivedErr := sut.Where(context.Background(), filter)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(BeEmpty())
+					Expect(receivedDummies).To(BeEmpty())
 				})
 			})
 
@@ -1190,9 +1190,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return empty slice and no error", func() {
-					receivedStructs, receivedErr := sut.Where(context.Background(), filter)
+					receivedDummies, receivedErr := sut.Where(context.Background(), filter)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(BeEmpty())
+					Expect(receivedDummies).To(BeEmpty())
 				})
 			})
 
@@ -1202,31 +1202,31 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return empty slice and no error", func() {
-					receivedStructs, receivedErr := sut.Where(context.Background(), filter)
+					receivedDummies, receivedErr := sut.Where(context.Background(), filter)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(BeEmpty())
+					Expect(receivedDummies).To(BeEmpty())
 				})
 			})
 
 			Context("when filter matches one document", func() {
 				BeforeEach(func() {
-					expectedDummy := dummies[documentCount/2]
+					expectedDummy := dummies[dummiesCount/2]
 					expectedDummies = []DummyStruct{expectedDummy}
 					filter = map[string]any{"string": expectedDummy.String}
 				})
 
 				It("should return correct documents and no error", func() {
-					receivedStructs, receivedErr := sut.Where(context.Background(), filter)
+					receivedDummies, receivedErr := sut.Where(context.Background(), filter)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(Equal(expectedDummies))
+					Expect(receivedDummies).To(Equal(expectedDummies))
 				})
 			})
 
 			Context("when filter matches multiple documents", func() {
 				BeforeEach(func() {
 					By("ensuring with UpdateID that there are multiple documents with the same field")
-					firstExpectedDummy := dummies[documentCount/2]
-					secondExpectedDummy := dummies[documentCount/2+1]
+					firstExpectedDummy := dummies[dummiesCount/2]
+					secondExpectedDummy := dummies[dummiesCount/2+1]
 
 					secondExpectedDummy.String = firstExpectedDummy.String
 					err := sut.UpdateID(context.Background(), secondExpectedDummy.ID, secondExpectedDummy)
@@ -1239,9 +1239,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return all matching documents and no error", func() {
-					receivedStructs, receivedErr := sut.Where(context.Background(), filter)
+					receivedDummies, receivedErr := sut.Where(context.Background(), filter)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(Equal(expectedDummies))
+					Expect(receivedDummies).To(Equal(expectedDummies))
 				})
 			})
 		})
@@ -1262,9 +1262,9 @@ var _ = Describe("collection{}", Ordered, func() {
 		Context("when collection is empty", func() {
 			Context("when filter is nil and order is nil", func() {
 				It("should return empty slice and no error", func() {
-					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), nil, nil)
+					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), nil, nil)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(BeEmpty())
+					Expect(receivedDummies).To(BeEmpty())
 				})
 			})
 
@@ -1274,9 +1274,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return empty slice and no error", func() {
-					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), nil, orderBy)
+					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), nil, orderBy)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(BeEmpty())
+					Expect(receivedDummies).To(BeEmpty())
 				})
 			})
 
@@ -1286,9 +1286,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return empty slice and no error", func() {
-					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, nil)
+					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), filter, nil)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(BeEmpty())
+					Expect(receivedDummies).To(BeEmpty())
 				})
 			})
 
@@ -1299,9 +1299,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return empty slice and no error", func() {
-					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(BeEmpty())
+					Expect(receivedDummies).To(BeEmpty())
 				})
 			})
 		})
@@ -1311,8 +1311,8 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
-				documentCount := randomIntBetween(10, 20)
-				dummies, err = populateCollectionWithManyFakeDocuments(sut, documentCount)
+				dummiesCount := randomIntBetween(10, 20)
+				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
 					Fail(err.Error())
 				}
@@ -1320,9 +1320,9 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			Context("when filter is nil and order is nil", func() {
 				It("should return all documents with no order and no error", func() {
-					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), nil, nil)
+					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), nil, nil)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(Equal(dummies))
+					Expect(receivedDummies).To(Equal(dummies))
 				})
 			})
 
@@ -1332,13 +1332,13 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return all documents ordered and no error", func() {
-					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), nil, orderBy)
+					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), nil, orderBy)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(ContainElements(dummies))
-					Expect(receivedStructs).To(HaveLen(len(dummies)))
+					Expect(receivedDummies).To(ContainElements(dummies))
+					Expect(receivedDummies).To(HaveLen(len(dummies)))
 
-					for i := 1; i < len(receivedStructs); i++ {
-						Expect(receivedStructs[i].Int).To(BeNumerically(">=", receivedStructs[i-1].Int))
+					for i := 1; i < len(receivedDummies); i++ {
+						Expect(receivedDummies[i].Int).To(BeNumerically(">=", receivedDummies[i-1].Int))
 					}
 				})
 			})
@@ -1349,9 +1349,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return all documents with no order and no error", func() {
-					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, nil)
+					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), filter, nil)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(Equal(dummies))
+					Expect(receivedDummies).To(Equal(dummies))
 				})
 			})
 
@@ -1362,12 +1362,12 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return all documents ordered and no error", func() {
-					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(ContainElements(dummies))
+					Expect(receivedDummies).To(ContainElements(dummies))
 
-					for i := 1; i < len(receivedStructs); i++ {
-						Expect(receivedStructs[i].Int).To(BeNumerically("<=", receivedStructs[i-1].Int))
+					for i := 1; i < len(receivedDummies); i++ {
+						Expect(receivedDummies[i].Int).To(BeNumerically("<=", receivedDummies[i-1].Int))
 					}
 				})
 			})
@@ -1379,9 +1379,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return empty slice and no error", func() {
-					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(BeEmpty())
+					Expect(receivedDummies).To(BeEmpty())
 				})
 			})
 
@@ -1392,9 +1392,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return all documents and no error", func() {
-					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(Equal(dummies))
+					Expect(receivedDummies).To(Equal(dummies))
 				})
 			})
 
@@ -1405,9 +1405,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return empty slice and no error", func() {
-					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(BeEmpty())
+					Expect(receivedDummies).To(BeEmpty())
 				})
 			})
 
@@ -1418,9 +1418,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return empty slice and no error", func() {
-					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
 					Expect(receivedErr).To(MatchError(ErrInvalidOrder))
-					Expect(receivedStructs).To(BeEmpty())
+					Expect(receivedDummies).To(BeEmpty())
 				})
 			})
 
@@ -1431,9 +1431,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return empty slice and no error", func() {
-					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(BeEmpty())
+					Expect(receivedDummies).To(BeEmpty())
 				})
 			})
 
@@ -1449,9 +1449,9 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return correct documents and no error", func() {
-					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(Equal(expectedDummies))
+					Expect(receivedDummies).To(Equal(expectedDummies))
 				})
 			})
 
@@ -1476,13 +1476,13 @@ var _ = Describe("collection{}", Ordered, func() {
 				})
 
 				It("should return all matching ordered documents and no error", func() {
-					receivedStructs, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
+					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
 					Expect(receivedErr).ToNot(HaveOccurred())
-					Expect(receivedStructs).To(ContainElements(expectedDummies))
-					Expect(receivedStructs).To(HaveLen(len(expectedDummies)))
+					Expect(receivedDummies).To(ContainElements(expectedDummies))
+					Expect(receivedDummies).To(HaveLen(len(expectedDummies)))
 
-					for i := 1; i < len(receivedStructs); i++ {
-						Expect(receivedStructs[i].Int).To(BeNumerically(">=", receivedStructs[i-1].Int))
+					for i := 1; i < len(receivedDummies); i++ {
+						Expect(receivedDummies[i].Int).To(BeNumerically(">=", receivedDummies[i-1].Int))
 					}
 				})
 			})
@@ -1506,8 +1506,8 @@ var _ = Describe("collection{}", Ordered, func() {
 		Context("when collection has default id index", func() {
 			BeforeAll(func() {
 				By("populating with Create")
-				documentCount := randomIntBetween(10, 20)
-				_, err := populateCollectionWithManyFakeDocuments(sut, documentCount)
+				dummiesCount := randomIntBetween(10, 20)
+				_, err := populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
 					Fail(err.Error())
 				}
