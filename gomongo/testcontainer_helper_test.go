@@ -2,7 +2,9 @@ package gomongo
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/mongodb"
@@ -11,7 +13,7 @@ import (
 )
 
 func runMongoContainer(ctx context.Context) (*mongodb.MongoDBContainer, string) {
-	mongodbContainer, err := mongodb.RunContainer(ctx, testcontainers.WithImage("mongo:6"))
+	mongodbContainer, err := mongodb.RunContainer(ctx, testcontainers.WithImage(getMongoImageName()))
 	if err != nil {
 		panic(err)
 	}
@@ -32,4 +34,9 @@ func terminateMongoContainer(mongodbContainer *mongodb.MongoDBContainer, ctx con
 
 func removeTestContainerLogs() {
 	testcontainers.Logger = log.New(GinkgoWriter, "", log.LstdFlags)
+}
+
+func getMongoImageName() string {
+	versionFromEnv := os.Getenv("MONGO_VERSION")
+	return fmt.Sprintf("mongo:%s", versionFromEnv)
 }
