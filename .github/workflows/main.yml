@@ -6,18 +6,17 @@ jobs:
   test:
     name: Tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [ '6', '4.4' ]
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-go@v5
       with:
         go-version: '1.21.4'
 
-    strategy:
-      matrix:
-        version: [ '6', '4.4' ]
-
     - name: Run Ginkgo Tests on Mongo ${{ matrix.version }}
-      run: go run github.com/onsi/ginkgo/v2/ginkgo -r -v ./...
+      run: MONGO_VERSION=${{ matrix.version }} go run github.com/onsi/ginkgo/v2/ginkgo -r -v ./...
 
   golangci:
     name: Golang CI Lint
