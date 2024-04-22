@@ -21,6 +21,7 @@ func where[T any](ctx context.Context, mongoCollection *mongo.Collection, filter
 }
 
 func mongoCursorToSlice[T any](ctx context.Context, cursor *mongo.Cursor) ([]T, error) {
+	defer cursor.Close(ctx)
 	var instanceSlice = []T{}
 
 	for cursor.Next(ctx) {
@@ -189,7 +190,6 @@ func createUniqueIndex(ctx context.Context, mongoCollection *mongo.Collection, n
 func listIndexes(ctx context.Context, mongoCollection *mongo.Collection) ([]Index, error) {
 	cursor, err := mongoCollection.Indexes().List(ctx)
 	if err != nil {
-		// mongo.CommandError
 		return nil, err
 	}
 
@@ -197,6 +197,7 @@ func listIndexes(ctx context.Context, mongoCollection *mongo.Collection) ([]Inde
 }
 
 func mongoCursorToSliceIndex(ctx context.Context, cursor *mongo.Cursor) ([]Index, error) {
+	defer cursor.Close(ctx)
 	var indexes []Index
 
 	for cursor.Next(ctx) {
