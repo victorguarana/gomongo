@@ -42,7 +42,6 @@ var _ = Describe("ConnectionSettings{}", func() {
 					}
 
 					receivedErr := sut.validate()
-
 					Expect(receivedErr).To(MatchError(ErrInvalidSettings))
 					Expect(receivedErr).To(MatchError(ContainSubstring("URI can not be empty")))
 				})
@@ -55,12 +54,10 @@ var _ = Describe("ConnectionSettings{}", func() {
 					}
 
 					receivedErr := sut.validate()
-
 					Expect(receivedErr).To(MatchError(ErrInvalidSettings))
 					Expect(receivedErr).To(MatchError(ContainSubstring("Database Name can not be empty")))
 				})
 			})
 		})
-
 	})
 })
