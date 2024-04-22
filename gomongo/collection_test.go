@@ -208,10 +208,7 @@ var _ = Describe("collection{}", Ordered, func() {
 			var deleteID ID
 
 			BeforeAll(func() {
-				deleteID, err = notExistentID()
-				if err != nil {
-					Fail(err.Error())
-				}
+				deleteID = nonExistentID()
 			})
 
 			It("should return error", func() {
@@ -244,10 +241,7 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			Context("when ID does not exist", func() {
 				BeforeAll(func() {
-					deleteID, err = notExistentID()
-					if err != nil {
-						Fail(err.Error())
-					}
+					deleteID = nonExistentID()
 				})
 
 				It("should return error and not delete any document", func() {
@@ -331,13 +325,8 @@ var _ = Describe("collection{}", Ordered, func() {
 				Fail(err.Error())
 			}
 
-			var err error
-			initialID, err = notExistentID()
-			if err != nil {
-				Fail(err.Error())
-			}
+			initialID = nonExistentID()
 			dummy.ID = initialID
-
 		})
 
 		AfterAll(func() {
@@ -402,11 +391,7 @@ var _ = Describe("collection{}", Ordered, func() {
 
 		Context("when collection is empty", func() {
 			BeforeAll(func() {
-				var err error
-				findID, err = notExistentID()
-				if err != nil {
-					Fail(err.Error())
-				}
+				findID = nonExistentID()
 			})
 
 			It("should return document not found error", func() {
@@ -437,17 +422,22 @@ var _ = Describe("collection{}", Ordered, func() {
 				}
 			})
 
-			Context("when ID does not exist", func() {
-				BeforeAll(func() {
-					_, err := notExistentID()
-					if err != nil {
-						Fail(err.Error())
-					}
-				})
-
+			Context("when ID is nil", func() {
 				It("should return empty id error", func() {
 					receivedDummy, receivedErr := sut.FindID(context.Background(), nil)
 					Expect(receivedErr).To(MatchError(ErrEmptyID))
+					Expect(receivedDummy).To(Equal(DummyStruct{}))
+				})
+			})
+
+			Context("when ID does not exist", func() {
+				BeforeAll(func() {
+					findID = nonExistentID()
+				})
+
+				It("should return empty id error", func() {
+					receivedDummy, receivedErr := sut.FindID(context.Background(), findID)
+					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -981,10 +971,7 @@ var _ = Describe("collection{}", Ordered, func() {
 
 		Context("when collection is empty", func() {
 			BeforeAll(func() {
-				dummy.ID, err = notExistentID()
-				if err != nil {
-					Fail(err.Error())
-				}
+				dummy.ID = nonExistentID()
 			})
 
 			It("should return error", func() {
@@ -1007,10 +994,7 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			Context("when ID does not exist", func() {
 				BeforeAll(func() {
-					dummy.ID, err = notExistentID()
-					if err != nil {
-						Fail(err.Error())
-					}
+					dummy.ID = nonExistentID()
 				})
 
 				It("should return error and not update any document", func() {
@@ -1775,10 +1759,7 @@ func insertManyInCollection(collection collection[DummyStruct], dummies []DummyS
 
 	return nil
 }
-func notExistentID() (ID, error) {
-	objectID, err := primitive.ObjectIDFromHex("60f3b3b3b3b3b3b3b3b3b3b3")
-	if err != nil {
-		return nil, err
-	}
-	return ID(&objectID), nil
+func nonExistentID() ID {
+	objectID := primitive.NewObjectID()
+	return ID(&objectID)
 }
