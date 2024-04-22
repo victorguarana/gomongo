@@ -81,9 +81,9 @@ func main() {
 
 ## Contributing
 
-Contributions are welcome! Before submitting a pull request, make sure the code is properly tested and follows the code style guidelines.
+WIP
 
 ## License
 
-This project is licensed under the [MIT License](https://github.com/victorguarana/gomongo/blob/main/LICENSE).
+WIP
 
