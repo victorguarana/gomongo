@@ -12,24 +12,24 @@ var _ = Describe("ConnectionSettings{}", func() {
 		Describe("valid cases", func() {
 			Context("when all settings are filled", func() {
 				It("returns nil", func() {
-					cs := ConnectionSettings{
+					sut := ConnectionSettings{
 						URI:               "mongodb://localhost:27017/test",
 						DatabaseName:      "test",
 						ConnectionTimeout: 10 * time.Second,
 					}
 
-					Expect(cs.validate()).To(Succeed())
+					Expect(sut.validate()).To(Succeed())
 				})
 			})
 
 			Context("when timeout is empty", func() {
 				It("returns nil", func() {
-					cs := ConnectionSettings{
+					sut := ConnectionSettings{
 						URI:          "mongodb://localhost:27017/test",
 						DatabaseName: "test",
 					}
 
-					Expect(cs.validate()).To(Succeed())
+					Expect(sut.validate()).To(Succeed())
 				})
 			})
 		})
@@ -37,11 +37,11 @@ var _ = Describe("ConnectionSettings{}", func() {
 		Describe("invalid cases", func() {
 			Context("when URI is empty", func() {
 				It("returns ErrInvalidSettings", func() {
-					cs := ConnectionSettings{
+					sut := ConnectionSettings{
 						DatabaseName: "test",
 					}
 
-					receivedErr := cs.validate()
+					receivedErr := sut.validate()
 
 					Expect(receivedErr).To(MatchError(ErrInvalidSettings))
 					Expect(receivedErr).To(MatchError(ContainSubstring("URI can not be empty")))
@@ -50,11 +50,11 @@ var _ = Describe("ConnectionSettings{}", func() {
 
 			Context("when DatabaseName is empty", func() {
 				It("returns ErrInvalidSettings", func() {
-					cs := ConnectionSettings{
+					sut := ConnectionSettings{
 						URI: "mongodb://localhost:27017/test",
 					}
 
-					receivedErr := cs.validate()
+					receivedErr := sut.validate()
 
 					Expect(receivedErr).To(MatchError(ErrInvalidSettings))
 					Expect(receivedErr).To(MatchError(ContainSubstring("Database Name can not be empty")))
