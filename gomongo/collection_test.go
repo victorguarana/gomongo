@@ -58,7 +58,7 @@ var _ = Describe("NewCollection", Ordered, func() {
 
 	BeforeAll(func() {
 		mongodbContainer, mongodbContainerURI = runMongoContainer(context.Background())
-		gomongoDatabase, _ = NewDatabase(ConnectionSettings{
+		gomongoDatabase, _ = NewDatabase(context.Background(), ConnectionSettings{
 			URI:               mongodbContainerURI,
 			DatabaseName:      databaseName,
 			ConnectionTimeout: time.Second,
@@ -116,7 +116,7 @@ var _ = Describe("collection{}", Ordered, func() {
 
 	BeforeAll(func() {
 		mongodbContainer, mongodbContainerURI = runMongoContainer(context.Background())
-		sut, err = initializeCollection(mongodbContainerURI, databaseName, collectionName)
+		sut, err = initializeCollection(context.Background(), mongodbContainerURI, databaseName, collectionName)
 		if err != nil {
 			Fail(err.Error())
 		}
@@ -1694,8 +1694,8 @@ var _ = Describe("collection{}", Ordered, func() {
 	})
 })
 
-func initializeCollection(mongoURI, databaseName, collectionName string) (collection[DummyStruct], error) {
-	gomongoDatabase, err := NewDatabase(ConnectionSettings{
+func initializeCollection(ctx context.Context, mongoURI, databaseName, collectionName string) (collection[DummyStruct], error) {
+	gomongoDatabase, err := NewDatabase(ctx, ConnectionSettings{
 		URI:               mongoURI,
 		DatabaseName:      databaseName,
 		ConnectionTimeout: time.Second,

@@ -18,17 +18,17 @@ type Database struct {
 	mongoDatabase *mongo.Database
 }
 
-func NewDatabase(cs ConnectionSettings) (*Database, error) {
+func NewDatabase(ctx context.Context, cs ConnectionSettings) (*Database, error) {
 	if err := cs.validate(); err != nil {
 		return nil, err
 	}
 
-	mongoClient, err := mongoClient(&cs, context.Background())
+	mongoClient, err := mongoClient(ctx, &cs)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrGomongoCanNotConnect, err)
 	}
 
-	if err := pingMongoServer(&cs, mongoClient, context.Background()); err != nil {
+	if err := pingMongoServer(&cs, mongoClient, ctx); err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrGomongoCanNotConnect, err)
 	}
 
@@ -37,7 +37,7 @@ func NewDatabase(cs ConnectionSettings) (*Database, error) {
 	}, nil
 }
 
-func mongoClient(cs *ConnectionSettings, ctx context.Context) (*mongo.Client, error) {
+func mongoClient(ctx context.Context, cs *ConnectionSettings) (*mongo.Client, error) {
 	return mongo.Connect(ctx, clientOptions(cs))
 }
 
