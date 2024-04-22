@@ -19,7 +19,6 @@ var _ = Describe("NewDatabase", Ordered, func() {
 
 	BeforeAll(func() {
 		mongodbContainer, mongodbContainerURI = runMongoContainer(context.Background())
-
 		connectionSettings = ConnectionSettings{
 			URI:               mongodbContainerURI,
 			DatabaseName:      "test",
@@ -31,7 +30,6 @@ var _ = Describe("NewDatabase", Ordered, func() {
 		Context("when mongo is running", func() {
 			It("returns nil", func() {
 				receivedDatabase, receivedErr := NewDatabase(connectionSettings)
-
 				Expect(receivedErr).NotTo(HaveOccurred())
 				Expect(receivedDatabase.mongoDatabase).NotTo(BeNil())
 			})
@@ -46,7 +44,6 @@ var _ = Describe("NewDatabase", Ordered, func() {
 
 		It("returns error", func() {
 			receivedDatabase, receivedErr := NewDatabase(connectionSettings)
-
 			Expect(receivedErr).To(MatchError(ErrGomongoCanNotConnect))
 			Expect(receivedDatabase).To(BeNil())
 		})
