@@ -29,7 +29,7 @@ var _ = Describe("NewDatabase", Ordered, func() {
 	Context("when mongo is up", func() {
 		Context("when mongo is running", func() {
 			It("returns nil", func() {
-				receivedDatabase, receivedErr := NewDatabase(connectionSettings)
+				receivedDatabase, receivedErr := NewDatabase(context.Background(), connectionSettings)
 				Expect(receivedErr).NotTo(HaveOccurred())
 				Expect(receivedDatabase.mongoDatabase).NotTo(BeNil())
 			})
@@ -43,7 +43,7 @@ var _ = Describe("NewDatabase", Ordered, func() {
 		})
 
 		It("returns error", func() {
-			receivedDatabase, receivedErr := NewDatabase(connectionSettings)
+			receivedDatabase, receivedErr := NewDatabase(context.Background(), connectionSettings)
 			Expect(receivedErr).To(MatchError(ErrGomongoCanNotConnect))
 			Expect(receivedDatabase).To(BeNil())
 		})
