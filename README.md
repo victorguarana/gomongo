@@ -79,6 +79,31 @@ func main() {
 }
 ```
 
+### Available Collection Interface
+```go
+type Collection[T any] interface {
+	All(ctx context.Context) ([]T, error)
+	Create(ctx context.Context, doc T) (ID, error)
+	Count(ctx context.Context) (int, error)
+	DeleteID(ctx context.Context, id ID) error
+	FindID(ctx context.Context, id ID) (T, error)
+	FindOne(ctx context.Context, filter any) (T, error)
+	First(ctx context.Context) (T, error)
+	FirstInserted(ctx context.Context, filter any) (T, error)
+	Last(ctx context.Context) (T, error)
+	LastInserted(ctx context.Context, filter any) (T, error)
+	UpdateID(ctx context.Context, id ID, doc T) error
+	Where(ctx context.Context, filter any) ([]T, error)
+	WhereWithOrder(ctx context.Context, filter any, orderBy map[string]OrderBy) ([]T, error)
+
+	CreateUniqueIndex(ctx context.Context, index Index) error
+	DeleteIndex(ctx context.Context, indexName string) error
+	ListIndexes(ctx context.Context) ([]Index, error)
+
+	Drop(ctx context.Context) error
+}
+```
+
 ## Contributing
 
 WIP
