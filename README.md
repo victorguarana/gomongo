@@ -106,9 +106,9 @@ type Collection[T any] interface {
 
 ## Contributing
 
-WIP
+Contributions are welcome! Before submitting a pull request, make sure the code is properly tested and follows the code style guidelines.
 
 ## License
 
-WIP
+This project is licensed under the [MIT License](https://github.com/victorguarana/gomongo/blob/main/LICENSE).
 
