@@ -1692,6 +1692,12 @@ var _ = Describe("collection{}", Ordered, func() {
 			})
 		})
 	})
+
+	Describe("Name", func() {
+		It("should return collection name", func() {
+			Expect(sut.Name()).To(Equal(collectionName))
+		})
+	})
 })
 
 func initializeCollection(ctx context.Context, mongoURI, databaseName, collectionName string) (collection[DummyStruct], error) {

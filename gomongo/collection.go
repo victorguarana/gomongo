@@ -55,6 +55,8 @@ type Collection[T any] interface {
 	ListIndexes(ctx context.Context) ([]Index, error)
 
 	Drop(ctx context.Context) error
+
+	Name() string
 }
 
 type collection[T any] struct {
@@ -62,7 +64,7 @@ type collection[T any] struct {
 }
 
 func NewCollection[T any](database *Database, collectionName string) (Collection[T], error) {
-	if database == nil || database.mongoDatabase == nil {
+	if err := validateDatabase(database); err != nil {
 		return nil, ErrConnectionNotInitialized
 	}
 
@@ -194,6 +196,11 @@ func (c *collection[T]) DeleteIndex(ctx context.Context, indexName string) error
 // Drop deletes a collection
 func (c *collection[T]) Drop(ctx context.Context) error {
 	return drop(ctx, c.mongoCollection)
+}
+
+// Name returns the name of a collection
+func (c *collection[T]) Name() string {
+	return c.mongoCollection.Name()
 }
 
 func validateReceivedID(id ID) error {

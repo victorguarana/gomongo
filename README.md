@@ -101,6 +101,8 @@ type Collection[T any] interface {
 	ListIndexes(ctx context.Context) ([]Index, error)
 
 	Drop(ctx context.Context) error
+
+	Name() string
 }
 ```
 
