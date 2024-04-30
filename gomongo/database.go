@@ -61,3 +61,11 @@ func pingMongoServer(cs *ConnectionSettings, mongoClient *mongo.Client, ctx cont
 
 	return mongoClient.Ping(ctx, nil)
 }
+
+func validateDatabase(database *Database) error {
+	if database == nil || database.mongoDatabase == nil {
+		return ErrConnectionNotInitialized
+	}
+
+	return nil
+}
