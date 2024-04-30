@@ -1,0 +1,7 @@
+- [ ] Implement History
+- [ ] gomongo.Options
+- [ ] Implement Validation Hooks
+- [ ] Implement Cache
+- [ ] Add Benchmarks
+- [ ] Add Badges to README
+- [ ] Add Index instructions
