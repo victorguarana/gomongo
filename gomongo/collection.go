@@ -35,7 +35,7 @@ type Index struct {
 	Name string
 }
 
-type Collection[T any] interface {
+type ICollection[T any] interface {
 	All(ctx context.Context) ([]T, error)
 	Create(ctx context.Context, doc T) (ID, error)
 	Count(ctx context.Context) (int, error)
@@ -59,40 +59,40 @@ type Collection[T any] interface {
 	Name() string
 }
 
-type collection[T any] struct {
+type Collection[T any] struct {
 	mongoCollection *mongo.Collection
 }
 
-func NewCollection[T any](database *Database, collectionName string) (Collection[T], error) {
+func NewCollection[T any](database Database, collectionName string) (Collection[T], error) {
 	if err := validateDatabase(database); err != nil {
-		return nil, ErrConnectionNotInitialized
+		return Collection[T]{}, ErrConnectionNotInitialized
 	}
 
-	return &collection[T]{
+	return Collection[T]{
 		mongoCollection: database.mongoDatabase.Collection(collectionName),
 	}, nil
 }
 
 // All returns all objects of a collection
-func (c *collection[T]) All(ctx context.Context) ([]T, error) {
+func (c Collection[T]) All(ctx context.Context) ([]T, error) {
 	emptyFilter := bson.M{}
 	emptyOrder := map[string]OrderBy{}
 	return where[T](ctx, c.mongoCollection, emptyFilter, emptyOrder)
 }
 
 // Count returns the number of objects of a collection
-func (c *collection[T]) Count(ctx context.Context) (int, error) {
+func (c Collection[T]) Count(ctx context.Context) (int, error) {
 	emptyFilter := bson.M{}
 	return count(ctx, c.mongoCollection, emptyFilter)
 }
 
 // Create inserts a new object into a collection and returns the id of the inserted document
-func (c *collection[T]) Create(ctx context.Context, instance T) (ID, error) {
+func (c Collection[T]) Create(ctx context.Context, instance T) (ID, error) {
 	return create(ctx, c.mongoCollection, instance)
 }
 
 // DeleteID deletes an object of a collection by id
-func (c *collection[T]) DeleteID(ctx context.Context, id ID) error {
+func (c Collection[T]) DeleteID(ctx context.Context, id ID) error {
 	if err := validateReceivedID(id); err != nil {
 		return err
 	}
@@ -102,7 +102,7 @@ func (c *collection[T]) DeleteID(ctx context.Context, id ID) error {
 }
 
 // FindID returns an object of a collection by id
-func (c *collection[T]) FindID(ctx context.Context, id ID) (T, error) {
+func (c Collection[T]) FindID(ctx context.Context, id ID) (T, error) {
 	if err := validateReceivedID(id); err != nil {
 		var t T
 		return t, err
@@ -114,42 +114,42 @@ func (c *collection[T]) FindID(ctx context.Context, id ID) (T, error) {
 }
 
 // FindOne returns an object of a collection by filter
-func (c *collection[T]) FindOne(ctx context.Context, filter any) (T, error) {
+func (c Collection[T]) FindOne(ctx context.Context, filter any) (T, error) {
 	filter = validateReceivedFilter(filter)
 	emptyOrder := map[string]OrderBy{}
 	return findOne[T](ctx, c.mongoCollection, filter, emptyOrder)
 }
 
 // First returns the first object of a collection in natural order
-func (c *collection[T]) First(ctx context.Context) (T, error) {
+func (c Collection[T]) First(ctx context.Context) (T, error) {
 	emptyFilter := bson.M{}
 	emptyOrder := map[string]OrderBy{}
 	return findOne[T](ctx, c.mongoCollection, emptyFilter, emptyOrder)
 }
 
 // FirstInserted returns the first object of a collection ordered by id
-func (c *collection[T]) FirstInserted(ctx context.Context, filter any) (T, error) {
+func (c Collection[T]) FirstInserted(ctx context.Context, filter any) (T, error) {
 	filter = validateReceivedFilter(filter)
 	order := map[string]OrderBy{"_id": OrderAsc}
 	return findOne[T](ctx, c.mongoCollection, filter, order)
 }
 
 // Last returns the last object of a collection in natural order
-func (c *collection[T]) Last(ctx context.Context) (T, error) {
+func (c Collection[T]) Last(ctx context.Context) (T, error) {
 	emptyFilter := bson.M{}
 	order := map[string]OrderBy{"$natural": OrderDesc}
 	return findOne[T](ctx, c.mongoCollection, emptyFilter, order)
 }
 
 // LastInserted returns the last object of a collection ordered by id
-func (c *collection[T]) LastInserted(ctx context.Context, filter any) (T, error) {
+func (c Collection[T]) LastInserted(ctx context.Context, filter any) (T, error) {
 	filter = validateReceivedFilter(filter)
 	order := map[string]OrderBy{"_id": OrderDesc}
 	return findOne[T](ctx, c.mongoCollection, filter, order)
 }
 
 // Update updates an object of a collection by id
-func (c *collection[T]) UpdateID(ctx context.Context, id ID, instance T) error {
+func (c Collection[T]) UpdateID(ctx context.Context, id ID, instance T) error {
 	if err := validateReceivedID(id); err != nil {
 		return err
 	}
@@ -159,14 +159,14 @@ func (c *collection[T]) UpdateID(ctx context.Context, id ID, instance T) error {
 }
 
 // Where returns all objects of a collection by filter
-func (c *collection[T]) Where(ctx context.Context, filter any) ([]T, error) {
+func (c Collection[T]) Where(ctx context.Context, filter any) ([]T, error) {
 	filter = validateReceivedFilter(filter)
 	emptyOrder := map[string]OrderBy{}
 	return where[T](ctx, c.mongoCollection, filter, emptyOrder)
 }
 
 // WhereWithOrder returns all objects of a collection by filter and order
-func (c *collection[T]) WhereWithOrder(ctx context.Context, filter any, order map[string]OrderBy) ([]T, error) {
+func (c Collection[T]) WhereWithOrder(ctx context.Context, filter any, order map[string]OrderBy) ([]T, error) {
 	filter = validateReceivedFilter(filter)
 	order, err := validateReceivedOrder(order)
 	if err != nil {
@@ -175,7 +175,7 @@ func (c *collection[T]) WhereWithOrder(ctx context.Context, filter any, order ma
 	return where[T](ctx, c.mongoCollection, filter, order)
 }
 
-func (c *collection[T]) CreateUniqueIndex(ctx context.Context, index Index) error {
+func (c Collection[T]) CreateUniqueIndex(ctx context.Context, index Index) error {
 	if err := validateReceivedIndex(index); err != nil {
 		return err
 	}
@@ -184,22 +184,22 @@ func (c *collection[T]) CreateUniqueIndex(ctx context.Context, index Index) erro
 }
 
 // ListIndexes returns all indexes of a collection
-func (c *collection[T]) ListIndexes(ctx context.Context) ([]Index, error) {
+func (c Collection[T]) ListIndexes(ctx context.Context) ([]Index, error) {
 	return listIndexes(ctx, c.mongoCollection)
 }
 
 // DeleteIndex deletes an index of a collection
-func (c *collection[T]) DeleteIndex(ctx context.Context, indexName string) error {
+func (c Collection[T]) DeleteIndex(ctx context.Context, indexName string) error {
 	return deleteIndex(ctx, c.mongoCollection, indexName)
 }
 
 // Drop deletes a collection
-func (c *collection[T]) Drop(ctx context.Context) error {
+func (c Collection[T]) Drop(ctx context.Context) error {
 	return drop(ctx, c.mongoCollection)
 }
 
 // Name returns the name of a collection
-func (c *collection[T]) Name() string {
+func (c Collection[T]) Name() string {
 	return c.mongoCollection.Name()
 }
 

@@ -53,7 +53,7 @@ var _ = Describe("NewCollection", Ordered, func() {
 		mongodbContainerURI string
 		mongodbContainer    *mongodb.MongoDBContainer
 
-		gomongoDatabase *Database
+		gomongoDatabase Database
 	)
 
 	BeforeAll(func() {
@@ -73,19 +73,11 @@ var _ = Describe("NewCollection", Ordered, func() {
 		})
 	})
 
-	Context("when database is nil", func() {
-		It("should return error", func() {
-			receivedCollection, receivedErr := NewCollection[DummyStruct](nil, collectionName)
-			Expect(receivedErr).To(MatchError(ErrConnectionNotInitialized))
-			Expect(receivedCollection).To(BeNil())
-		})
-	})
-
 	Context("when database is not initialized", func() {
 		It("should return error", func() {
-			receivedCollection, receivedErr := NewCollection[DummyStruct](&Database{}, collectionName)
+			receivedCollection, receivedErr := NewCollection[DummyStruct](Database{}, collectionName)
 			Expect(receivedErr).To(MatchError(ErrConnectionNotInitialized))
-			Expect(receivedCollection).To(BeNil())
+			Expect(receivedCollection).To(Equal(Collection[DummyStruct]{}))
 		})
 	})
 
@@ -102,7 +94,7 @@ var _ = Describe("NewCollection", Ordered, func() {
 	})
 })
 
-var _ = Describe("collection{}", Ordered, func() {
+var _ = Describe("Collection{}", Ordered, func() {
 	var (
 		databaseName   = "database_test"
 		collectionName = "collection_test"
@@ -110,11 +102,11 @@ var _ = Describe("collection{}", Ordered, func() {
 		mongodbContainerURI string
 		mongodbContainer    *mongodb.MongoDBContainer
 
-		sut collection[DummyStruct]
-		err error
+		sut Collection[DummyStruct]
 	)
 
 	BeforeAll(func() {
+		var err error
 		mongodbContainer, mongodbContainerURI = runMongoContainer(context.Background())
 		sut, err = initializeCollection(context.Background(), mongodbContainerURI, databaseName, collectionName)
 		if err != nil {
@@ -140,6 +132,7 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
+				var err error
 				dummiesCount := randomIntBetween(10, 20)
 				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
@@ -409,6 +402,7 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
+				var err error
 				dummiesCount := randomIntBetween(10, 20)
 				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
@@ -502,6 +496,7 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
+				var err error
 				dummiesCount := randomIntBetween(10, 20)
 				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
@@ -667,6 +662,7 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
+				var err error
 				dummiesCount := randomIntBetween(10, 20)
 				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
@@ -848,6 +844,7 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
+				var err error
 				dummiesCount := randomIntBetween(10, 20)
 				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
@@ -985,6 +982,7 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
+				var err error
 				dummiesCount := randomIntBetween(10, 20)
 				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
@@ -1125,6 +1123,7 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
+				var err error
 				dummiesCount = randomIntBetween(10, 20)
 				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
@@ -1295,6 +1294,7 @@ var _ = Describe("collection{}", Ordered, func() {
 
 			BeforeAll(func() {
 				By("populating with Create")
+				var err error
 				dummiesCount := randomIntBetween(10, 20)
 				dummies, err = populateCollectionWithManyFakeDocuments(sut, dummiesCount)
 				if err != nil {
@@ -1700,7 +1700,7 @@ var _ = Describe("collection{}", Ordered, func() {
 	})
 })
 
-func initializeCollection(ctx context.Context, mongoURI, databaseName, collectionName string) (collection[DummyStruct], error) {
+func initializeCollection(ctx context.Context, mongoURI, databaseName, collectionName string) (Collection[DummyStruct], error) {
 	gomongoDatabase, err := NewDatabase(ctx, ConnectionSettings{
 		URI:               mongoURI,
 		DatabaseName:      databaseName,
@@ -1708,10 +1708,10 @@ func initializeCollection(ctx context.Context, mongoURI, databaseName, collectio
 	})
 
 	if err != nil {
-		return collection[DummyStruct]{}, fmt.Errorf("Could not create database: %e", err)
+		return Collection[DummyStruct]{}, fmt.Errorf("Could not create database: %e", err)
 	}
 
-	sut := collection[DummyStruct]{
+	sut := Collection[DummyStruct]{
 		mongoCollection: gomongoDatabase.mongoDatabase.Collection(collectionName),
 	}
 
@@ -1730,7 +1730,7 @@ func randomIntBetween(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-func populateCollectionWithManyFakeDocuments(collection collection[DummyStruct], n int) ([]DummyStruct, error) {
+func populateCollectionWithManyFakeDocuments(collection Collection[DummyStruct], n int) ([]DummyStruct, error) {
 	dummies, err := generateDummyStructs(n)
 	if err != nil {
 		return nil, err
@@ -1754,7 +1754,7 @@ func generateDummyStructs(n int) ([]DummyStruct, error) {
 	return dummies, nil
 }
 
-func insertManyInCollection(collection collection[DummyStruct], dummies []DummyStruct) error {
+func insertManyInCollection(collection Collection[DummyStruct], dummies []DummyStruct) error {
 	for i, dummy := range dummies {
 		var err error
 		dummies[i].ID, err = collection.Create(context.Background(), dummy)
