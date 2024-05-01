@@ -18,7 +18,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/victorguarana/gomongo"
+	"github.com/victorguarana/gomongo/gomongo"
 )
 
 type Movie struct {
