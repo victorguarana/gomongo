@@ -10,6 +10,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// Collection should always implement ICollection
+var _ ICollection[any] = Collection[any]{}
+
 var (
 	ErrEmptyID                  = errors.New("id can not be nil")
 	ErrConnectionNotInitialized = errors.New("connection was not initialized")
