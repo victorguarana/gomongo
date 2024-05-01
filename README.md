@@ -17,8 +17,11 @@ The code bellow sets up a connection to a MongoDB database, creates a collection
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/victorguarana/gomongo"
+	"time"
+
+	"github.com/victorguarana/gomongo/gomongo"
 )
 
 type Movie struct {

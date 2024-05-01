@@ -45,7 +45,7 @@ var _ = Describe("NewDatabase", Ordered, func() {
 		It("returns error", func() {
 			receivedDatabase, receivedErr := NewDatabase(context.Background(), connectionSettings)
 			Expect(receivedErr).To(MatchError(ErrGomongoCanNotConnect))
-			Expect(receivedDatabase).To(BeNil())
+			Expect(receivedDatabase).To(Equal(Database{}))
 		})
 	})
 })
