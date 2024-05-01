@@ -17,7 +17,10 @@ The code bellow sets up a connection to a MongoDB database, creates a collection
 package main
 
 import (
+	"context"
 	"fmt"
+	"time"
+
 	"github.com/victorguarana/gomongo/gomongo"
 )
 
