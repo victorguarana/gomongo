@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/go-faker/faker/v4"
-	"github.com/testcontainers/testcontainers-go/modules/mongodb"
+	"github.com/testcontainers/testcontainers-go"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -51,7 +51,7 @@ var _ = Describe("NewCollection", Ordered, func() {
 		collectionName = "collection_test"
 
 		mongodbContainerURI string
-		mongodbContainer    *mongodb.MongoDBContainer
+		mongodbContainer    testcontainers.Container
 
 		gomongoDatabase Database
 	)
@@ -83,7 +83,7 @@ var _ = Describe("NewCollection", Ordered, func() {
 
 	Context("when mongo is down", func() {
 		BeforeEach(func() {
-			terminateMongoContainer(mongodbContainer, context.Background())
+			terminateContainer(mongodbContainer, context.Background())
 		})
 
 		It("should return collection", func() {
@@ -100,7 +100,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 		collectionName = "collection_test"
 
 		mongodbContainerURI string
-		mongodbContainer    *mongodb.MongoDBContainer
+		mongodbContainer    testcontainers.Container
 
 		sut Collection[DummyStruct]
 	)
@@ -115,7 +115,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 	})
 
 	AfterAll(func() {
-		terminateMongoContainer(mongodbContainer, context.Background())
+		terminateContainer(mongodbContainer, context.Background())
 	})
 
 	Describe("All", Ordered, func() {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/testcontainers/testcontainers-go/modules/mongodb"
+	"github.com/testcontainers/testcontainers-go"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -12,7 +12,7 @@ import (
 
 var _ = Describe("NewDatabase", Ordered, func() {
 	var (
-		mongodbContainer    *mongodb.MongoDBContainer
+		mongodbContainer    testcontainers.Container
 		mongodbContainerURI string
 		connectionSettings  ConnectionSettings
 	)
@@ -39,7 +39,7 @@ var _ = Describe("NewDatabase", Ordered, func() {
 
 	Context("when mongo is down", func() {
 		BeforeAll(func() {
-			terminateMongoContainer(mongodbContainer, context.Background())
+			terminateContainer(mongodbContainer, context.Background())
 		})
 
 		It("returns error", func() {

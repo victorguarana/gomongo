@@ -7,26 +7,45 @@ import (
 	"os"
 
 	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/modules/mongodb"
+	"github.com/testcontainers/testcontainers-go/wait"
 
 	. "github.com/onsi/ginkgo/v2"
 )
 
-func runMongoContainer(ctx context.Context) (*mongodb.MongoDBContainer, string) {
-	mongodbContainer, err := mongodb.RunContainer(ctx, testcontainers.WithImage(getMongoImageName()))
+func runMongoContainer(ctx context.Context) (testcontainers.Container, string) {
+	req := testcontainers.ContainerRequest{
+		Image:        "mongo:4.2",
+		Cmd:          []string{"--replSet", "local", "--bind_ip_all"},
+		ExposedPorts: []string{"27017/tcp"},
+		WaitingFor:   wait.ForLog("waiting for connections on port 27017"),
+	}
+
+	mongoC, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
 	if err != nil {
 		panic(err)
 	}
 
-	mongodbContainerURI, err := mongodbContainer.ConnectionString(ctx)
+	_, _, err = mongoC.Exec(ctx, []string{"mongo", "--eval", "rs.initiate({_id: \"local\", members: [{ _id : 0, host : \"localhost:27017\"}] })"})
 	if err != nil {
 		panic(err)
 	}
 
-	return mongodbContainer, mongodbContainerURI
+	mongoC.Endpoint(ctx, "mongodb")
+
+	mongodbContainerURI, err := mongoC.Endpoint(ctx, "mongodb")
+	if err != nil {
+		panic(err)
+	}
+
+	mongodbContainerURI = fmt.Sprintf("%s/test?replicaSet=local", mongodbContainerURI)
+
+	return mongoC, mongodbContainerURI
 }
 
-func terminateMongoContainer(mongodbContainer *mongodb.MongoDBContainer, ctx context.Context) {
+func terminateContainer(mongodbContainer testcontainers.Container, ctx context.Context) {
 	if err := mongodbContainer.Terminate(ctx); err != nil {
 		panic(err)
 	}
