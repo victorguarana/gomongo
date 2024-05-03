@@ -1,4 +1,4 @@
-package gomongo
+package gomongo_test
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-faker/faker/v4"
 	"github.com/testcontainers/testcontainers-go/modules/mongodb"
+	"github.com/victorguarana/gomongo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -15,7 +16,7 @@ import (
 )
 
 type DummyStruct struct {
-	ID           ID `bson:"_id" custom:"-"`
+	ID           gomongo.ID `bson:"_id" custom:"-"`
 	Int          int
 	Int8         int8
 	Int16        int16
@@ -53,12 +54,12 @@ var _ = Describe("NewCollection", Ordered, func() {
 		mongodbContainerURI string
 		mongodbContainer    *mongodb.MongoDBContainer
 
-		gomongoDatabase Database
+		gomongoDatabase gomongo.Database
 	)
 
 	BeforeAll(func() {
 		mongodbContainer, mongodbContainerURI = runMongoContainer(context.Background())
-		gomongoDatabase, _ = NewDatabase(context.Background(), ConnectionSettings{
+		gomongoDatabase, _ = gomongo.NewDatabase(context.Background(), gomongo.ConnectionSettings{
 			URI:               mongodbContainerURI,
 			DatabaseName:      databaseName,
 			ConnectionTimeout: time.Second,
@@ -67,7 +68,7 @@ var _ = Describe("NewCollection", Ordered, func() {
 
 	Context("when database is initialized", func() {
 		It("should return collection", func() {
-			receivedCollection, receivedErr := NewCollection[DummyStruct](gomongoDatabase, collectionName)
+			receivedCollection, receivedErr := gomongo.NewCollection[DummyStruct](gomongoDatabase, collectionName)
 			Expect(receivedErr).ToNot(HaveOccurred())
 			Expect(receivedCollection).ToNot(BeNil())
 		})
@@ -75,9 +76,9 @@ var _ = Describe("NewCollection", Ordered, func() {
 
 	Context("when database is not initialized", func() {
 		It("should return error", func() {
-			receivedCollection, receivedErr := NewCollection[DummyStruct](Database{}, collectionName)
-			Expect(receivedErr).To(MatchError(ErrConnectionNotInitialized))
-			Expect(receivedCollection).To(Equal(Collection[DummyStruct]{}))
+			receivedCollection, receivedErr := gomongo.NewCollection[DummyStruct](gomongo.Database{}, collectionName)
+			Expect(receivedErr).To(MatchError(gomongo.ErrConnectionNotInitialized))
+			Expect(receivedCollection).To(Equal(gomongo.Collection[DummyStruct]{}))
 		})
 	})
 
@@ -87,7 +88,7 @@ var _ = Describe("NewCollection", Ordered, func() {
 		})
 
 		It("should return collection", func() {
-			receivedCollection, receivedErr := NewCollection[DummyStruct](gomongoDatabase, collectionName)
+			receivedCollection, receivedErr := gomongo.NewCollection[DummyStruct](gomongoDatabase, collectionName)
 			Expect(receivedErr).ToNot(HaveOccurred())
 			Expect(receivedCollection).ToNot(BeNil())
 		})
@@ -102,7 +103,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 		mongodbContainerURI string
 		mongodbContainer    *mongodb.MongoDBContainer
 
-		sut Collection[DummyStruct]
+		sut gomongo.Collection[DummyStruct]
 	)
 
 	BeforeAll(func() {
@@ -193,12 +194,12 @@ var _ = Describe("Collection{}", Ordered, func() {
 		Context("when collection ID is nil", func() {
 			It("should return error", func() {
 				receivedErr := sut.DeleteID(context.Background(), nil)
-				Expect(receivedErr).To(MatchError(ErrEmptyID))
+				Expect(receivedErr).To(MatchError(gomongo.ErrEmptyID))
 			})
 		})
 
 		Context("when collection is empty", func() {
-			var deleteID ID
+			var deleteID gomongo.ID
 
 			BeforeAll(func() {
 				deleteID = nonExistentID()
@@ -206,13 +207,13 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 			It("should return error", func() {
 				receivedErr := sut.DeleteID(context.Background(), deleteID)
-				Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+				Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 			})
 		})
 
 		Context("when collection is filled", func() {
 			var (
-				deleteID ID
+				deleteID gomongo.ID
 				dummies  []DummyStruct
 			)
 
@@ -239,7 +240,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 				It("should return error and not delete any document", func() {
 					receivedErr := sut.DeleteID(context.Background(), deleteID)
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 
 					By("validating with All")
 					receivedDummies, receivedErr := sut.All(context.Background())
@@ -309,7 +310,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 	Describe("Create", Ordered, func() {
 		var (
 			dummy             DummyStruct
-			initialID         ID
+			initialID         gomongo.ID
 			receivedCreateErr error
 		)
 
@@ -372,12 +373,12 @@ var _ = Describe("Collection{}", Ordered, func() {
 	})
 
 	Describe("FindID", func() {
-		var findID ID
+		var findID gomongo.ID
 
 		Context("when id is nil", func() {
 			It("should return empty id error", func() {
 				receivedDummy, receivedErr := sut.FindID(context.Background(), nil)
-				Expect(receivedErr).To(MatchError(ErrEmptyID))
+				Expect(receivedErr).To(MatchError(gomongo.ErrEmptyID))
 				Expect(receivedDummy).To(Equal(DummyStruct{}))
 			})
 		})
@@ -389,7 +390,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 			It("should return document not found error", func() {
 				receivedDummy, receivedErr := sut.FindID(context.Background(), findID)
-				Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+				Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 				Expect(receivedDummy).To(Equal(DummyStruct{}))
 			})
 		})
@@ -419,7 +420,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 			Context("when ID is nil", func() {
 				It("should return empty id error", func() {
 					receivedDummy, receivedErr := sut.FindID(context.Background(), nil)
-					Expect(receivedErr).To(MatchError(ErrEmptyID))
+					Expect(receivedErr).To(MatchError(gomongo.ErrEmptyID))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -431,7 +432,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 				It("should return empty id error", func() {
 					receivedDummy, receivedErr := sut.FindID(context.Background(), findID)
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -483,7 +484,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 		Context("when collection is empty", func() {
 			It("should return document not found error", func() {
 				receivedDummy, receivedErr := sut.FindOne(context.Background(), nil)
-				Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+				Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 				Expect(receivedDummy).To(Equal(DummyStruct{}))
 			})
 		})
@@ -542,7 +543,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 				It("should return document not found error", func() {
 					receivedDummy, receivedErr := sut.FindOne(context.Background(), filter)
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -554,7 +555,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 				It("should return document not found error", func() {
 					receivedDummy, receivedErr := sut.FindOne(context.Background(), filter)
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -566,7 +567,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 				It("should return document not found error", func() {
 					receivedDummy, receivedErr := sut.FindOne(context.Background(), filter)
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -590,7 +591,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 		Context("when collection is empty", func() {
 			It("should return document not found error", func() {
 				receivedDummy, receivedErr := sut.First(context.Background())
-				Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+				Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 				Expect(receivedDummy).To(Equal(DummyStruct{}))
 			})
 		})
@@ -636,7 +637,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 			Context("when filter is nil", func() {
 				It("should return document not found error", func() {
 					receivedDummy, receivedErr := sut.FirstInserted(context.Background(), nil)
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -648,7 +649,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 				It("should return document not found error", func() {
 					receivedDummy, receivedErr := sut.FirstInserted(context.Background(), filter)
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -702,7 +703,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 				It("should return document not found error", func() {
 					receivedDummy, receivedErr := sut.FirstInserted(context.Background(), filter)
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -714,7 +715,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 				It("should return document not found error", func() {
 					receivedDummy, receivedErr := sut.FirstInserted(context.Background(), filter)
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -726,7 +727,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 				It("should return document not found error", func() {
 					receivedDummy, receivedErr := sut.FirstInserted(context.Background(), filter)
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -778,7 +779,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 		Context("when collection is empty", func() {
 			It("should return document not found error", func() {
 				receivedDummy, receivedErr := sut.Last(context.Background())
-				Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+				Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 				Expect(receivedDummy).To(Equal(DummyStruct{}))
 			})
 		})
@@ -818,7 +819,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 			Context("when filter is nil", func() {
 				It("should return document not found error", func() {
 					receivedDummy, receivedErr := sut.LastInserted(context.Background(), nil)
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -830,7 +831,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 				It("should return document not found error", func() {
 					receivedDummy, receivedErr := sut.LastInserted(context.Background(), filter)
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -884,7 +885,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 				It("should return document not found error", func() {
 					receivedDummy, receivedErr := sut.LastInserted(context.Background(), filter)
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -896,7 +897,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 				It("should return document not found error", func() {
 					receivedDummy, receivedErr := sut.LastInserted(context.Background(), filter)
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -908,7 +909,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 				It("should return document not found error", func() {
 					receivedDummy, receivedErr := sut.LastInserted(context.Background(), filter)
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 					Expect(receivedDummy).To(Equal(DummyStruct{}))
 				})
 			})
@@ -962,7 +963,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 		Context("when id is nil", func() {
 			It("should return empty id error", func() {
 				receivedErr := sut.UpdateID(context.Background(), nil, DummyStruct{})
-				Expect(receivedErr).To(MatchError(ErrEmptyID))
+				Expect(receivedErr).To(MatchError(gomongo.ErrEmptyID))
 			})
 		})
 
@@ -973,7 +974,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 			It("should return error", func() {
 				receivedErr := sut.UpdateID(context.Background(), dummy.ID, DummyStruct{})
-				Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+				Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 			})
 		})
 
@@ -997,7 +998,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 				It("should return error and not update any document", func() {
 					receivedErr := sut.UpdateID(context.Background(), dummy.ID, DummyStruct{})
-					Expect(receivedErr).To(MatchError(ErrDocumentNotFound))
+					Expect(receivedErr).To(MatchError(gomongo.ErrDocumentNotFound))
 
 					By("validating with All")
 					receivedAll, receivedErr := sut.All(context.Background())
@@ -1233,7 +1234,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 	Describe("WhereWithOrder", func() {
 		var (
 			filter  map[string]any
-			orderBy map[string]OrderBy
+			orderBy map[string]gomongo.OrderBy
 		)
 
 		AfterAll(func() {
@@ -1253,7 +1254,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 			Context("when filter is nil and order is filled", func() {
 				BeforeEach(func() {
-					orderBy = map[string]OrderBy{"string": OrderAsc}
+					orderBy = map[string]gomongo.OrderBy{"string": gomongo.OrderAsc}
 				})
 
 				It("should return empty slice and no error", func() {
@@ -1278,7 +1279,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 			Context("when filter is filled and order is filled", func() {
 				BeforeEach(func() {
 					filter = map[string]any{"string": ""}
-					orderBy = map[string]OrderBy{"string": OrderAsc}
+					orderBy = map[string]gomongo.OrderBy{"string": gomongo.OrderAsc}
 				})
 
 				It("should return empty slice and no error", func() {
@@ -1312,7 +1313,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 			Context("when filter is nil and order is filled", func() {
 				BeforeEach(func() {
-					orderBy = map[string]OrderBy{"int": OrderAsc}
+					orderBy = map[string]gomongo.OrderBy{"int": gomongo.OrderAsc}
 				})
 
 				It("should return all documents ordered and no error", func() {
@@ -1342,7 +1343,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 			Context("when filter is not nil and order is filled", func() {
 				BeforeEach(func() {
 					filter = map[string]any{}
-					orderBy = map[string]OrderBy{"int": OrderDesc}
+					orderBy = map[string]gomongo.OrderBy{"int": gomongo.OrderDesc}
 				})
 
 				It("should return all documents ordered and no error", func() {
@@ -1359,7 +1360,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 			Context("when filter does not have existing fields", func() {
 				BeforeEach(func() {
 					filter = map[string]any{"nonexistent": 0}
-					orderBy = map[string]OrderBy{"int": OrderAsc}
+					orderBy = map[string]gomongo.OrderBy{"int": gomongo.OrderAsc}
 				})
 
 				It("should return empty slice and no error", func() {
@@ -1372,7 +1373,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 			Context("when order does not have existing fields", func() {
 				BeforeEach(func() {
 					filter = map[string]any{}
-					orderBy = map[string]OrderBy{"nonexistent": OrderAsc}
+					orderBy = map[string]gomongo.OrderBy{"nonexistent": gomongo.OrderAsc}
 				})
 
 				It("should return all documents and no error", func() {
@@ -1385,7 +1386,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 			Context("when filter have wrong value type", func() {
 				BeforeEach(func() {
 					filter = map[string]any{"string": -1}
-					orderBy = map[string]OrderBy{"string": OrderAsc}
+					orderBy = map[string]gomongo.OrderBy{"string": gomongo.OrderAsc}
 				})
 
 				It("should return empty slice and no error", func() {
@@ -1398,12 +1399,12 @@ var _ = Describe("Collection{}", Ordered, func() {
 			Context("when orderby have wrong value type", func() {
 				BeforeEach(func() {
 					filter = map[string]any{}
-					orderBy = map[string]OrderBy{"string": 0}
+					orderBy = map[string]gomongo.OrderBy{"string": 0}
 				})
 
 				It("should return empty slice and no error", func() {
 					receivedDummies, receivedErr := sut.WhereWithOrder(context.Background(), filter, orderBy)
-					Expect(receivedErr).To(MatchError(ErrInvalidOrder))
+					Expect(receivedErr).To(MatchError(gomongo.ErrInvalidOrder))
 					Expect(receivedDummies).To(BeEmpty())
 				})
 			})
@@ -1411,7 +1412,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 			Context("when filter does not match any document", func() {
 				BeforeEach(func() {
 					filter = map[string]any{"string": ""}
-					orderBy = map[string]OrderBy{"string": OrderAsc}
+					orderBy = map[string]gomongo.OrderBy{"string": gomongo.OrderAsc}
 				})
 
 				It("should return empty slice and no error", func() {
@@ -1429,7 +1430,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 					expectedDummies = []DummyStruct{expectedDummy}
 
 					filter = map[string]any{"string": expectedDummy.String}
-					orderBy = map[string]OrderBy{"string": OrderAsc}
+					orderBy = map[string]gomongo.OrderBy{"string": gomongo.OrderAsc}
 				})
 
 				It("should return correct documents and no error", func() {
@@ -1456,7 +1457,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 					expectedDummies = []DummyStruct{firstExpectedDummy, secondExpectedDummy}
 
 					filter = map[string]any{"string": firstExpectedDummy.String}
-					orderBy = map[string]OrderBy{"int": OrderAsc}
+					orderBy = map[string]gomongo.OrderBy{"int": gomongo.OrderAsc}
 				})
 
 				It("should return all matching ordered documents and no error", func() {
@@ -1475,8 +1476,8 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 	Describe("ListIndexes", func() {
 		var (
-			defaultIndex = Index{Name: "_id_", Keys: map[string]OrderBy{"_id": OrderAsc}}
-			customIndex  = Index{Name: "custom_index", Keys: map[string]OrderBy{"string": OrderAsc}}
+			defaultIndex = gomongo.Index{Name: "_id_", Keys: map[string]gomongo.OrderBy{"_id": gomongo.OrderAsc}}
+			customIndex  = gomongo.Index{Name: "custom_index", Keys: map[string]gomongo.OrderBy{"string": gomongo.OrderAsc}}
 		)
 
 		Context("when collection has no custom index", func() {
@@ -1506,7 +1507,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 			It("should return default index", func() {
 				receivedIndexes, receivedErr := sut.ListIndexes(context.Background())
 				Expect(receivedErr).ToNot(HaveOccurred())
-				Expect(receivedIndexes).To(Equal([]Index{defaultIndex}))
+				Expect(receivedIndexes).To(Equal([]gomongo.Index{defaultIndex}))
 			})
 		})
 
@@ -1526,22 +1527,22 @@ var _ = Describe("Collection{}", Ordered, func() {
 			It("should return default index and custom index", func() {
 				receivedIndexes, receivedErr := sut.ListIndexes(context.Background())
 				Expect(receivedErr).ToNot(HaveOccurred())
-				Expect(receivedIndexes).To(Equal([]Index{defaultIndex, customIndex}))
+				Expect(receivedIndexes).To(Equal([]gomongo.Index{defaultIndex, customIndex}))
 			})
 		})
 	})
 
 	Describe("CreateUniqueIndex", func() {
-		var index Index
+		var index gomongo.Index
 
 		Context("when keys is nil", func() {
 			BeforeAll(func() {
-				index = Index{Name: "", Keys: nil}
+				index = gomongo.Index{Name: "", Keys: nil}
 			})
 
 			It("should return error and not create index", func() {
 				receivedErr := sut.CreateUniqueIndex(context.Background(), index)
-				Expect(receivedErr).To(MatchError(ErrInvalidIndex))
+				Expect(receivedErr).To(MatchError(gomongo.ErrInvalidIndex))
 
 				By("validating with ListIndexes")
 				receivedIndexes, receivedErr := sut.ListIndexes(context.Background())
@@ -1552,12 +1553,12 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 		Context("when keys is empty", func() {
 			BeforeAll(func() {
-				index = Index{Name: "", Keys: map[string]OrderBy{}}
+				index = gomongo.Index{Name: "", Keys: map[string]gomongo.OrderBy{}}
 			})
 
 			It("should return error and not create index", func() {
 				receivedErr := sut.CreateUniqueIndex(context.Background(), index)
-				Expect(receivedErr).To(MatchError(ErrInvalidIndex))
+				Expect(receivedErr).To(MatchError(gomongo.ErrInvalidIndex))
 
 				By("validating with ListIndexes")
 				receivedIndexes, receivedRrr := sut.ListIndexes(context.Background())
@@ -1568,12 +1569,12 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 		Context("when one key is empty", func() {
 			BeforeAll(func() {
-				index = Index{Name: "", Keys: map[string]OrderBy{"": OrderAsc}}
+				index = gomongo.Index{Name: "", Keys: map[string]gomongo.OrderBy{"": gomongo.OrderAsc}}
 			})
 
 			It("should return error and not create index", func() {
 				receivedErr := sut.CreateUniqueIndex(context.Background(), index)
-				Expect(receivedErr).To(MatchError(ErrInvalidIndex))
+				Expect(receivedErr).To(MatchError(gomongo.ErrInvalidIndex))
 
 				By("validating with ListIndexes")
 				receivedIndexes, receivedErr := sut.ListIndexes(context.Background())
@@ -1584,12 +1585,12 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 		Context("when key order is wrong", func() {
 			BeforeAll(func() {
-				index = Index{Name: "", Keys: map[string]OrderBy{"string": 0}}
+				index = gomongo.Index{Name: "", Keys: map[string]gomongo.OrderBy{"string": 0}}
 			})
 
 			It("should return error and not create index", func() {
 				receivedErr := sut.CreateUniqueIndex(context.Background(), index)
-				Expect(receivedErr).To(MatchError(ErrInvalidIndex))
+				Expect(receivedErr).To(MatchError(gomongo.ErrInvalidIndex))
 
 				By("validating with ListIndexes")
 				receivedIndexes, receivedErr := sut.ListIndexes(context.Background())
@@ -1600,7 +1601,7 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 		Context("when name is empty", func() {
 			BeforeAll(func() {
-				index = Index{Name: "", Keys: map[string]OrderBy{"string": OrderAsc}}
+				index = gomongo.Index{Name: "", Keys: map[string]gomongo.OrderBy{"string": gomongo.OrderAsc}}
 			})
 
 			AfterAll(func() {
@@ -1616,13 +1617,13 @@ var _ = Describe("Collection{}", Ordered, func() {
 				By("validating with ListIndexes")
 				receivedIndexes, receivedErr := sut.ListIndexes(context.Background())
 				Expect(receivedErr).ToNot(HaveOccurred())
-				Expect(receivedIndexes).To(ContainElement(Index{Name: "string_1", Keys: index.Keys}))
+				Expect(receivedIndexes).To(ContainElement(gomongo.Index{Name: "string_1", Keys: index.Keys}))
 			})
 		})
 
 		Context("when name is filled", func() {
 			BeforeAll(func() {
-				index = Index{Name: "unique_string", Keys: map[string]OrderBy{"string": OrderAsc}}
+				index = gomongo.Index{Name: "unique_string", Keys: map[string]gomongo.OrderBy{"string": gomongo.OrderAsc}}
 			})
 
 			AfterAll(func() {
@@ -1645,8 +1646,8 @@ var _ = Describe("Collection{}", Ordered, func() {
 
 	Describe("DeleteIndex", func() {
 		var (
-			defaultIndex = Index{Name: "_id_", Keys: map[string]OrderBy{"_id": OrderAsc}}
-			customIndex  = Index{Name: "custom_index", Keys: map[string]OrderBy{"string": OrderAsc}}
+			defaultIndex = gomongo.Index{Name: "_id_", Keys: map[string]gomongo.OrderBy{"_id": gomongo.OrderAsc}}
+			customIndex  = gomongo.Index{Name: "custom_index", Keys: map[string]gomongo.OrderBy{"string": gomongo.OrderAsc}}
 		)
 
 		BeforeAll(func() {
@@ -1664,14 +1665,14 @@ var _ = Describe("Collection{}", Ordered, func() {
 		Context("when index does not exist", func() {
 			It("should return error", func() {
 				receivedErr := sut.DeleteIndex(context.Background(), "nonexistent")
-				Expect(receivedErr).To(MatchError(ErrIndexNotFound))
+				Expect(receivedErr).To(MatchError(gomongo.ErrIndexNotFound))
 			})
 		})
 
 		Context("when index is default", func() {
 			It("should return error and not delete index", func() {
 				receivedErr := sut.DeleteIndex(context.Background(), defaultIndex.Name)
-				Expect(receivedErr).To(MatchError(ErrInvalidCommandOptions))
+				Expect(receivedErr).To(MatchError(gomongo.ErrInvalidCommandOptions))
 
 				By("validating with ListIndexes")
 				receivedIndexes, receivedErr := sut.ListIndexes(context.Background())
@@ -1700,19 +1701,20 @@ var _ = Describe("Collection{}", Ordered, func() {
 	})
 })
 
-func initializeCollection(ctx context.Context, mongoURI, databaseName, collectionName string) (Collection[DummyStruct], error) {
-	gomongoDatabase, err := NewDatabase(ctx, ConnectionSettings{
+func initializeCollection(ctx context.Context, mongoURI, databaseName, collectionName string) (gomongo.Collection[DummyStruct], error) {
+	gomongoDatabase, err := gomongo.NewDatabase(ctx, gomongo.ConnectionSettings{
 		URI:               mongoURI,
 		DatabaseName:      databaseName,
 		ConnectionTimeout: time.Second,
 	})
 
 	if err != nil {
-		return Collection[DummyStruct]{}, fmt.Errorf("Could not create database: %e", err)
+		return gomongo.Collection[DummyStruct]{}, fmt.Errorf("Could not create database: %e", err)
 	}
 
-	sut := Collection[DummyStruct]{
-		mongoCollection: gomongoDatabase.mongoDatabase.Collection(collectionName),
+	sut, err := gomongo.NewCollection[DummyStruct](gomongoDatabase, collectionName)
+	if err != nil {
+		return gomongo.Collection[DummyStruct]{}, fmt.Errorf("Could not create collection: %e", err)
 	}
 
 	return sut, nil
@@ -1730,7 +1732,7 @@ func randomIntBetween(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-func populateCollectionWithManyFakeDocuments(collection Collection[DummyStruct], n int) ([]DummyStruct, error) {
+func populateCollectionWithManyFakeDocuments(collection gomongo.Collection[DummyStruct], n int) ([]DummyStruct, error) {
 	dummies, err := generateDummyStructs(n)
 	if err != nil {
 		return nil, err
@@ -1754,7 +1756,7 @@ func generateDummyStructs(n int) ([]DummyStruct, error) {
 	return dummies, nil
 }
 
-func insertManyInCollection(collection Collection[DummyStruct], dummies []DummyStruct) error {
+func insertManyInCollection(collection gomongo.Collection[DummyStruct], dummies []DummyStruct) error {
 	for i, dummy := range dummies {
 		var err error
 		dummies[i].ID, err = collection.Create(context.Background(), dummy)
@@ -1765,7 +1767,7 @@ func insertManyInCollection(collection Collection[DummyStruct], dummies []DummyS
 
 	return nil
 }
-func nonExistentID() ID {
+func nonExistentID() gomongo.ID {
 	objectID := primitive.NewObjectID()
-	return ID(&objectID)
+	return gomongo.ID(&objectID)
 }
