@@ -7,7 +7,7 @@ GoMongo is an Object-Relational Mapping (ORM) library for MongoDB in Go. It simp
 To install GoMongo, you can use the following go get command:
 
 ```bash
-go get github.com/github.com/victorguarana/gomongo
+go get github.com/victorguarana/gomongo
 ```
 
 ## Basic Usage
