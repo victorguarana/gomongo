@@ -1,4 +1,4 @@
-package gomongo
+package gomongo_test
 
 import (
 	"context"
