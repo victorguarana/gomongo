@@ -1,4 +1,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/victorguarana/gomongo.svg)](https://pkg.go.dev/github.com/victorguarana/gomongo)
+[![Go Report Card](https://goreportcard.com/badge/victorguarana/gomongo)](https://goreportcard.com/report/victorguarana/gomongo)
+[![License](https://img.shields.io/github/license/victorguarana/gomongo)](https://github.com/victorguarana/gomongo/blob/main/LICENSE)
+
 # GoMongo
 
 GoMongo is an Object-Relational Mapping (ORM) library for MongoDB in Go. It simplifies the process of interacting with MongoDB, allowing developers to perform Mongo operations in an intuitive and efficient manner.
